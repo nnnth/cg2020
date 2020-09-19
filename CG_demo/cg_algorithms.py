@@ -164,19 +164,31 @@ def draw_curve(p_list, algorithm):
     :return: (list of list of int: [[x_0, y_0], [x_1, y_1], [x_2, y_2], ...]) 绘制结果的像素点坐标列表
     """
     result = []
-    p_list.sort(key=lambda a:a[0])
-    if algorithm == 'Bezier':
-        n = len(p_list) - 1
+    p_list.sort(key=lambda a: a[0])
+    n = len(p_list) - 1
+    if algorithm == 'Bezier' or n<3:
         u = 0
-        while u <1:
+        while u < 1:
             temp = p_list[:]
             for r in range(n):
                 for i in range(n - r):
                     temp[i] = [(1 - u) * temp[i][0] + u * temp[i + 1][0], (1 - u) * temp[i][1] + u * temp[i + 1][1]]
-            u = u+0.002
-            result.append((round(temp[0][0]),round(temp[0][1])))
+            u = u + 0.002
+            result.append((round(temp[0][0]), round(temp[0][1])))
     else:
-        pass
+        for i in range(n - 2):
+            u = 0
+            while u <= 1:
+                u_2 = pow(u, 2)
+                u_3 = pow(u, 3)
+                x = 1 / 6 * (
+                            (-u_3 + 3 * u_2 - 3 * u + 1) * p_list[i][0] + (3 * u_3 - 6 * u_2 + 4) * p_list[i + 1][0] + (
+                                -3 * u_3 + 3 * u_2 + 3 * u + 1) * p_list[i + 2][0] + u_3 * p_list[i + 3][0])
+                y = 1 / 6 * (
+                            (-u_3 + 3 * u_2 - 3 * u + 1) * p_list[i][1] + (3 * u_3 - 6 * u_2 + 4) * p_list[i + 1][1] + (
+                                -3 * u_3 + 3 * u_2 + 3 * u + 1) * p_list[i + 2][1] + u_3 * p_list[i + 3][1])
+                result.append((round(x), round(y)))
+                u = u + 0.01
     return result
 
 
@@ -188,7 +200,10 @@ def translate(p_list, dx, dy):
     :param dy: (int) 垂直方向平移量
     :return: (list of list of int: [[x_0, y_0], [x_1, y_1], [x_2, y_2], ...]) 变换后的图元参数
     """
-    pass
+    result = []
+    for x,y in p_list[:]:
+        result.append((x+dx,y+dy))
+    return result
 
 
 def rotate(p_list, x, y, r):
@@ -230,4 +245,4 @@ def clip(p_list, x_min, y_min, x_max, y_max, algorithm):
 
 
 if __name__ == '__main__':
-    print(range(0,1,0.01))
+    print(range(0, 1, 0.01))
