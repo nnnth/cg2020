@@ -12,6 +12,8 @@ def draw_line(p_list, algorithm):
     :param algorithm: (string) 绘制使用的算法，包括'DDA'和'Bresenham'，此处的'Naive'仅作为示例，测试时不会出现
     :return: (list of list of int: [[x_0, y_0], [x_1, y_1], [x_2, y_2], ...]) 绘制结果的像素点坐标列表
     """
+    if not p_list:
+        return []
     x0, y0 = p_list[0]
     x1, y1 = p_list[1]
     result = []
@@ -166,7 +168,7 @@ def draw_curve(p_list, algorithm):
     result = []
     p_list.sort(key=lambda a: a[0])
     n = len(p_list) - 1
-    if algorithm == 'Bezier' or n<3:
+    if algorithm == 'Bezier' or n < 3:
         u = 0
         while u < 1:
             temp = p_list[:]
@@ -182,11 +184,11 @@ def draw_curve(p_list, algorithm):
                 u_2 = pow(u, 2)
                 u_3 = pow(u, 3)
                 x = 1 / 6 * (
-                            (-u_3 + 3 * u_2 - 3 * u + 1) * p_list[i][0] + (3 * u_3 - 6 * u_2 + 4) * p_list[i + 1][0] + (
-                                -3 * u_3 + 3 * u_2 + 3 * u + 1) * p_list[i + 2][0] + u_3 * p_list[i + 3][0])
+                        (-u_3 + 3 * u_2 - 3 * u + 1) * p_list[i][0] + (3 * u_3 - 6 * u_2 + 4) * p_list[i + 1][0] + (
+                        -3 * u_3 + 3 * u_2 + 3 * u + 1) * p_list[i + 2][0] + u_3 * p_list[i + 3][0])
                 y = 1 / 6 * (
-                            (-u_3 + 3 * u_2 - 3 * u + 1) * p_list[i][1] + (3 * u_3 - 6 * u_2 + 4) * p_list[i + 1][1] + (
-                                -3 * u_3 + 3 * u_2 + 3 * u + 1) * p_list[i + 2][1] + u_3 * p_list[i + 3][1])
+                        (-u_3 + 3 * u_2 - 3 * u + 1) * p_list[i][1] + (3 * u_3 - 6 * u_2 + 4) * p_list[i + 1][1] + (
+                        -3 * u_3 + 3 * u_2 + 3 * u + 1) * p_list[i + 2][1] + u_3 * p_list[i + 3][1])
                 result.append((round(x), round(y)))
                 u = u + 0.01
     return result
@@ -201,8 +203,10 @@ def translate(p_list, dx, dy):
     :return: (list of list of int: [[x_0, y_0], [x_1, y_1], [x_2, y_2], ...]) 变换后的图元参数
     """
     result = []
-    for x,y in p_list[:]:
-        result.append((x+dx,y+dy))
+    print(p_list)
+    print(dx, dy)
+    for x, y in p_list[:]:
+        result.append((x + dx, y + dy))
     return result
 
 
@@ -215,7 +219,13 @@ def rotate(p_list, x, y, r):
     :param r: (int) 顺时针旋转角度（°）
     :return: (list of list of int: [[x_0, y_0], [x_1, y_1], [x_2, y_2], ...]) 变换后的图元参数
     """
-    pass
+    'P=((Xo-Cx)×cosθ-(Yo-Cy)×sinθ+Cx,(Xo-Cx)×sinθ+(Yo-Cy)×cosθ+Cy)'
+    result = []
+    for a, b in p_list:
+        a = (a - x) * math.cos(r) - (b - y) * math.sin(r) + x
+        b = (a - x) * math.sin(r) + (b - y) * math.cos(r) + y
+        result.append((round(a), round(b)))
+    return result
 
 
 def scale(p_list, x, y, s):
@@ -227,7 +237,22 @@ def scale(p_list, x, y, s):
     :param s: (float) 缩放倍数
     :return: (list of list of int: [[x_0, y_0], [x_1, y_1], [x_2, y_2], ...]) 变换后的图元参数
     """
-    pass
+    result = []
+    for a, b in p_list:
+        a = (a - x) * s + x
+        b = (b - y) * s + y
+        result.append((round(a), round(b)))
+    return result
+
+
+def test(p, q, u1, u2):
+    if p < 0:
+        u1 = max(u1, q / p)
+    elif p > 0:
+        u2 = min(u2, q / p)
+    elif q < 0:
+        return False, 0, 0
+    return u1 <= u2, u1, u2
 
 
 def clip(p_list, x_min, y_min, x_max, y_max, algorithm):
@@ -241,7 +266,50 @@ def clip(p_list, x_min, y_min, x_max, y_max, algorithm):
     :param algorithm: (string) 使用的裁剪算法，包括'Cohen-Sutherland'和'Liang-Barsky'
     :return: (list of list of int: [[x_0, y_0], [x_1, y_1]]) 裁剪后线段的起点和终点坐标
     """
-    pass
+    x0, y0 = p_list[0]
+    x1, y1 = p_list[1]
+    if algorithm == 'Cohen-Sutherland':
+        while True:
+            code1 = (y0 > y_max) << 3 | (y0 < y_min) << 2 | (x0 > x_max) << 1 | (x0 < x_min)
+            code2 = (y1 > y_max) << 3 | (y1 < y_min) << 2 | (x1 > x_max) << 1 | (x1 < x_min)
+            if code1 | code2 == 0:
+                return [(x0, y0), (x1, y1)]
+            if code1 & code2 != 0:
+                return []
+            if code1 == 0:
+                x0, y0, x1, y1 = x1, y1, x0, y0
+            if code1 & 0x8 == 8:
+                # ymax = y0 + u*(y1-y0)
+                u = (y_max - y0) / (y1 - y0)
+                x0 = round(x0 + u * (x1 - x0))
+                y0 = y_max
+            elif code1 & 0x4 == 4:
+                u = (y_min - y0) / (y1 - y0)
+                x0 = round(x0 + u * (x1 - x0))
+                y0 = y_min
+            elif code1 & 0x2 == 2:
+                u = (x_max - x0) / (x1 - x0)
+                y0 = round(y0 + u * (y1 - y0))
+                x0 = x_max
+            elif code1 & 0x1 == 1:
+                u = (x_min - x0) / (x1 - x0)
+                y0 = round(y0 + u * (y1 - y0))
+                x0 = x_min
+    else:
+        u1, u2 = 0, 1
+        dx = x1 - x0
+        dy = y1 - y0
+        p = [-dx, dx, -dy, dy]
+        q = [x0 - x_min, x_max - x0, y0 - y_min, y_max - y0]
+        for pk, qk in zip(p, q):
+            able, u1, u2 = test(pk, qk, u1, u2)
+            if able == False:
+                return []
+        x1 = round(x0 + u2 * dx)
+        y1 = round(y0 + u2 * dy)
+        x0 = round(x0 + u1 * dx)
+        y0 = round(y0 + u1 * dy)
+        return [(x0, y0), (x1, y1)]
 
 
 if __name__ == '__main__':
