@@ -43,7 +43,7 @@ def draw_line(p_list, algorithm):
         for i in range(length):
             x0 = x0 + deltax
             y0 = y0 + deltay
-            result.append((int(x0), int(y0)))
+            result.append((round(x0), round(y0)))
     elif algorithm == 'Bresenham':
         lenx = abs(x1 - x0)
         leny = abs(y1 - y0)
@@ -100,13 +100,13 @@ def draw_ellipse(p_list):
     a = (max(x0, x1) - min(x0, x1)) / 2
     b = (max(y0, y1) - min(y0, y1)) / 2
     reverse = False
-    mid = [(x0 + x1) / 2, (y0 + y1) / 2]
+    mid = [int((x0 + x1) / 2), int((y0 + y1) / 2)]
     if a < b:
         reverse = True
         a, b = b, a
     p = b * b - a * a * b + a * a / 4
     x = 0
-    y = b
+    y = int(b)
     if reverse:
         result.append((y, x))
     else:
@@ -168,7 +168,7 @@ def draw_curve(p_list, algorithm):
     result = []
     p_list.sort(key=lambda a: a[0])
     n = len(p_list) - 1
-    if algorithm == 'Bezier' or n < 3:
+    if algorithm == 'Bezier':
         u = 0
         while u < 1:
             temp = p_list[:]
@@ -178,6 +178,44 @@ def draw_curve(p_list, algorithm):
             u = u + 0.002
             result.append((round(temp[0][0]), round(temp[0][1])))
     else:
+        # print(n)
+        # delta = 1 / (n + 4)
+        # u = [0]
+        # for i in range(1, n + 4):
+        #     u.append(u[i - 1] + delta)
+        # u.append(1)
+        # print(u)
+        # t = u[3]
+        # j = 3
+        # while t <= u[n + 1]:
+        #     temp = p_list[:]
+        #     j = int(t/ delta)
+        #     for r in range(1,4):
+        #         for i in range(j - 4 + r + 1, j + 1):
+        #             try:
+        #                 lam = (t - u[i]) / (u[i + 4 - r] - u[i])
+        #                 temp[j] = [lam * temp[j][0] + (1 - lam) * temp[j - 1][0],
+        #                            lam * temp[j][1] + (1 - lam) * temp[j - 1][1]]
+        #             except Exception:
+        #                 print(i,j,r)
+        #                 exit()
+        #     t = t + 0.002
+        #     result.append((round(temp[j][0]), round(temp[j][1])))
+        if n == 0:
+            return p_list
+        elif n == 1:
+            return draw_line(p_list, 'DDA')
+        elif n == 2:
+            u = 0
+            while u <= 1:
+                u_2 = pow(u, 2)
+                x = 1/2*((u_2 - 2 * u + 1) * p_list[0][0] + (- 2 * u_2 + 2 * u+1) * p_list[1][0] + u_2 * p_list[2][
+                    0])
+                y = 1/2*((u_2 - 2 * u + 1) * p_list[0][1] + (- 2 * u_2 + 2 * u+1) * p_list[1][1] + u_2 * p_list[2][
+                    1])
+                result.append((round(x), round(y)))
+                u = u + 0.001
+            return result
         for i in range(n - 2):
             u = 0
             while u <= 1:
@@ -203,8 +241,6 @@ def translate(p_list, dx, dy):
     :return: (list of list of int: [[x_0, y_0], [x_1, y_1], [x_2, y_2], ...]) 变换后的图元参数
     """
     result = []
-    print(p_list)
-    print(dx, dy)
     for x, y in p_list[:]:
         result.append((x + dx, y + dy))
     return result
@@ -220,11 +256,12 @@ def rotate(p_list, x, y, r):
     :return: (list of list of int: [[x_0, y_0], [x_1, y_1], [x_2, y_2], ...]) 变换后的图元参数
     """
     'P=((Xo-Cx)×cosθ-(Yo-Cy)×sinθ+Cx,(Xo-Cx)×sinθ+(Yo-Cy)×cosθ+Cy)'
+    r = (r / 180) * math.pi
     result = []
     for a, b in p_list:
-        a = (a - x) * math.cos(r) - (b - y) * math.sin(r) + x
-        b = (a - x) * math.sin(r) + (b - y) * math.cos(r) + y
-        result.append((round(a), round(b)))
+        a1 = (a - x) * math.cos(r) - (b - y) * math.sin(r) + x
+        b1 = (a - x) * math.sin(r) + (b - y) * math.cos(r) + y
+        result.append((round(a1), round(b1)))
     return result
 
 
@@ -279,7 +316,6 @@ def clip(p_list, x_min, y_min, x_max, y_max, algorithm):
             if code1 == 0:
                 x0, y0, x1, y1 = x1, y1, x0, y0
             if code1 & 0x8 == 8:
-                # ymax = y0 + u*(y1-y0)
                 u = (y_max - y0) / (y1 - y0)
                 x0 = round(x0 + u * (x1 - x0))
                 y0 = y_max
@@ -311,6 +347,4 @@ def clip(p_list, x_min, y_min, x_max, y_max, algorithm):
         y0 = round(y0 + u1 * dy)
         return [(x0, y0), (x1, y1)]
 
-
-if __name__ == '__main__':
-    print(range(0, 1, 0.01))
+# if __name__ == '__main__':

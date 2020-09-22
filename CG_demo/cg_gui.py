@@ -117,6 +117,7 @@ class MyCanvas(QGraphicsView):
             if (a < 0 and y > self.temp_item.p_list[1]) or (a > 0 and y < self.temp_item.p_list[1]) or (
                     b < 0 and x < self.temp_item.p_list[0]) or (b > 0 and x > self.temp_item.p_list[0]):
                 r = -r
+            r = r*180/math.pi
             self.item_dict[self.selected_id].p_list = alg.rotate(item.p_list, cx, cy, r)
             self.temp_item.p_list = [x, y]
         elif self.status == 'scale':
@@ -126,7 +127,6 @@ class MyCanvas(QGraphicsView):
             cy = rect.center().y()
             width = rect.width()
             scale = abs((x - cx) / (width / 2))
-            print(item.p_list)
             self.item_dict[self.selected_id].p_list = alg.scale(item.p_list, cx, cy, scale)
             self.temp_item.p_list = [x, y]
         self.updateScene([self.sceneRect()])
@@ -155,7 +155,6 @@ class MyCanvas(QGraphicsView):
             y_min = min(y,self.temp_item.p_list[0][1])
             y_max = max(y,self.temp_item.p_list[0][1])
             self.item_dict[self.selected_id].p_list = alg.clip(item.p_list,x_min,y_min,x_max,y_max,self.temp_item.algorithm)
-            print(self.item_dict[self.selected_id].p_list)
             self.updateScene([self.sceneRect()])
 
         super().mouseReleaseEvent(event)

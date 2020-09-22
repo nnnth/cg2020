@@ -1,7 +1,20 @@
 resetCanvas 600 500
 setColor 0 255 0
-drawLine line1 100 50 500 200 Naive
+drawLine line1 100 50 500 200 DDA
+drawLine line2 300 400 200 300 DDA
 saveCanvas 1
 setColor 255 0 0
-drawLine 666 200 300 400 150 Naive
+drawLine 666 200 300 400 150 Bresenham
 saveCanvas 2
+setColor 0 0 255
+drawPolygon polygon1 50 100 90 200 300 80 200 100 DDA
+drawEllipse e1 200 400 400 200
+drawCurve c1 20 50 30 80 70 90 100 200 300 400 400 150 Bezier
+drawCurve c2 200 300 250 350 400 370 50 100 500 400 B-spline
+saveCanvas 3
+translate line1 50 200
+rotate polygon1 175 140 90
+scale e1 300 300 0.2
+clip 666 250 200 450 300 Cohen-Sutherland
+clip line2 250 350 350 400 Liang-Barsky
+saveCanvas 4
