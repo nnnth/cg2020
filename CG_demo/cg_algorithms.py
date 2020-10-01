@@ -97,8 +97,8 @@ def draw_ellipse(p_list):
     if x0 == x1 and y0 == y1:
         result.append((x0, y0))
         return result
-    a = (max(x0, x1) - min(x0, x1)) / 2
-    b = (max(y0, y1) - min(y0, y1)) / 2
+    a = abs(x0-x1) / 2
+    b = abs(y0-y1) / 2
     reverse = False
     mid = [int((x0 + x1) / 2), int((y0 + y1) / 2)]
     if a < b:
@@ -303,6 +303,8 @@ def clip(p_list, x_min, y_min, x_max, y_max, algorithm):
     :param algorithm: (string) 使用的裁剪算法，包括'Cohen-Sutherland'和'Liang-Barsky'
     :return: (list of list of int: [[x_0, y_0], [x_1, y_1]]) 裁剪后线段的起点和终点坐标
     """
+    if not p_list:
+        return []
     x0, y0 = p_list[0]
     x1, y1 = p_list[1]
     if algorithm == 'Cohen-Sutherland':
