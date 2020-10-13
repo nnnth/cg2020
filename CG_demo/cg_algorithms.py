@@ -3,6 +3,51 @@
 
 # 本文件只允许依赖math库
 import math
+from functools import cmp_to_key
+
+
+def sign(x):
+    if x > 0:
+        return 1
+    elif x < 0:
+        return -1
+    else:
+        return 0
+
+
+# def getcmp(center):
+#     def pointcmp(a, b):
+#         x0, y0 = a
+#         x1, y1 = b
+#         x, y = center
+#         if x0 > x1:
+#             return 1
+#         if x0 == x1:
+#             return sign(y0 > y1)
+#         det = (x0 - x) * (y1 - y) - (x1 - x) * (y0 - y)
+#         if det == 0:
+#             d1 = (x0 - x) * (x0 - x) + (y0 - y) * (y0 - y)
+#             d2 = (x1 - x) * (x1 - x) + (y1 - y) * (y1 - y)
+#             return sign(d1 > d2)
+#         else:
+#             return -sign(det)
+#
+#     return pointcmp
+def pointcmp(a, b,center):
+    x0, y0 = a
+    x1, y1 = b
+    x, y = center
+    if x0 > x1:
+        return True
+    if x0 == x1:
+        return y0 > y1
+    det = (x0 - x) * (y1 - y) - (x1 - x) * (y0 - y)
+    if det == 0:
+        d1 = (x0 - x) * (x0 - x) + (y0 - y) * (y0 - y)
+        d2 = (x1 - x) * (x1 - x) + (y1 - y) * (y1 - y)
+        return d1 > d2
+    else:
+        return det<0
 
 
 def draw_line(p_list, algorithm):
@@ -97,8 +142,8 @@ def draw_ellipse(p_list):
     if x0 == x1 and y0 == y1:
         result.append((x0, y0))
         return result
-    a = abs(x0-x1) / 2
-    b = abs(y0-y1) / 2
+    a = abs(x0 - x1) / 2
+    b = abs(y0 - y1) / 2
     reverse = False
     mid = [int((x0 + x1) / 2), int((y0 + y1) / 2)]
     if a < b:
@@ -209,10 +254,12 @@ def draw_curve(p_list, algorithm):
             u = 0
             while u <= 1:
                 u_2 = pow(u, 2)
-                x = 1/2*((u_2 - 2 * u + 1) * p_list[0][0] + (- 2 * u_2 + 2 * u+1) * p_list[1][0] + u_2 * p_list[2][
-                    0])
-                y = 1/2*((u_2 - 2 * u + 1) * p_list[0][1] + (- 2 * u_2 + 2 * u+1) * p_list[1][1] + u_2 * p_list[2][
-                    1])
+                x = 1 / 2 * (
+                            (u_2 - 2 * u + 1) * p_list[0][0] + (- 2 * u_2 + 2 * u + 1) * p_list[1][0] + u_2 * p_list[2][
+                        0])
+                y = 1 / 2 * (
+                            (u_2 - 2 * u + 1) * p_list[0][1] + (- 2 * u_2 + 2 * u + 1) * p_list[1][1] + u_2 * p_list[2][
+                        1])
                 result.append((round(x), round(y)))
                 u = u + 0.001
             return result
