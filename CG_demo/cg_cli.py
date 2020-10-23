@@ -41,7 +41,8 @@ if __name__ == '__main__':
                     elif item_type == 'curve':
                         pixels = alg.draw_curve(p_list,algorithm)
                     for x, y in pixels:
-                        canvas[height-1-y, x] = color
+                        canvas[y, x] = color
+                        #canvas[y, x] = color
 
                 Image.fromarray(canvas).save(os.path.join(output_dir, save_name + '.bmp'), 'bmp')
             elif line[0] == 'setColor':

@@ -113,6 +113,31 @@ def draw_line(p_list, algorithm):
                 y0 = y0 + (p >= 0) * stepy
             p = p + 2 * dy - 2 * (p >= 0) * dx
             result.append((x0, y0))
+    elif algorithm == 'middle':
+        lenx = abs(x1 - x0)
+        leny = abs(y1 - y0)
+        reverse = False
+        if lenx >= leny:
+            dx = lenx
+            dy = leny
+        else:
+            dx = leny
+            dy = lenx
+            reverse = True
+        d = 2 * dy + dx
+        stepx = 1 if x1 > x0 else -1
+        stepy = 1 if y1 > y0 else -1
+        result.append((x0, y0))
+        for i in range(dx):
+            if reverse:
+                x0 = x0 + (d< 0) * stepx
+                y0 = y0 + stepy
+            else:
+                x0 = x0 + stepx
+                y0 = y0 + (d < 0) * stepy
+            d = d + 2 * dy + 2 * (d <0) * dx
+            result.append((x0, y0))
+
     return result
 
 
