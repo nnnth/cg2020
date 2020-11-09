@@ -27,8 +27,10 @@ from PyQt5.QtWidgets import (
     QLabel,
     QSpinBox,
     QDialogButtonBox,
-    QFileDialog)
-from PyQt5.QtGui import QPainter, QMouseEvent, QColor
+    QFileDialog,
+    QMessageBox,
+    QLineEdit)
+from PyQt5.QtGui import QPainter, QMouseEvent, QColor, QFont
 from PyQt5.QtCore import QRectF, QPointF
 
 
@@ -36,17 +38,18 @@ def pointcmp(a, b, center):
     x0, y0 = a
     x1, y1 = b
     x, y = center
-    if x0 >= center[0] > x1:
-        return True
-    if x0 == center[0] and x1 == center[0]:
-        return y0 > y1
-    det = (x0 - x) * (y1 - y) - (x1 - x) * (y0 - y)
-    if det == 0:
-        d1 = (x0 - x) * (x0 - x) + (y0 - y) * (y0 - y)
-        d2 = (x1 - x) * (x1 - x) + (y1 - y) * (y1 - y)
-        return d1 > d2
-    else:
-        return det < 0
+    # if x0 >= center[0] > x1:
+    #     return True
+    # if x0 == center[0] and x1 == center[0]:
+    #     return y0 > y1
+    # det = (x0 - x) * (y1 - y) - (x1 - x) * (y0 - y)
+    # if det == 0:
+    #     d1 = (x0 - x) * (x0 - x) + (y0 - y) * (y0 - y)
+    #     d2 = (x1 - x) * (x1 - x) + (y1 - y) * (y1 - y)
+    #     return d1 > d2
+    # else:
+    #     return det < 0
+    return math.atan2(y1 - center[1], x1 - center[0]) > math.atan2(y0 - center[1], x0 - center[0])
 
 
 class MyCanvas(QGraphicsView):
@@ -98,6 +101,8 @@ class MyCanvas(QGraphicsView):
     def redo(self):
         if self.temp_id != '':
             id = int(self.temp_id)
+            if len(self.item_dict) == 0:
+                return
             while self.item_dict.get('%d' % id) is None:
                 id = id - 1
             last_id = '%d' % id
@@ -109,11 +114,19 @@ class MyCanvas(QGraphicsView):
                 self.item_dict[last_id].p_list.pop()
             self.updateScene([self.sceneRect()])
 
+    def downitem(self):
+        if self.selected_id != "":
+            item = self.item_dict[self.selected_id]
+            del self.item_dict[self.selected_id]
+            self.item_dict["%d" % (int(self.temp_id) + 1)] = item
+            self.selected_id = "%d" % (int(self.temp_id) + 1)
+            self.finish_draw()
+
     def mousePressEvent(self, event: QMouseEvent) -> None:
         pos = self.mapToScene(event.localPos().toPoint())
         x = int(pos.x())
         y = int(pos.y())
-        if self.status == 'line' or self.status == 'ellipse':
+        if self.status in ['line', 'ellipse']:
             self.temp_item = MyItem(self.temp_id, self.status, [[x, y], [x, y]], self.temp_algorithm)
             self.scene().addItem(self.temp_item)
         elif self.status == 'polygon' or self.status == 'curve':
@@ -121,7 +134,7 @@ class MyCanvas(QGraphicsView):
                 self.temp_item = MyItem(self.temp_id, self.status, [[x, y], [x, y]], self.temp_algorithm)
                 self.scene().addItem(self.temp_item)
             else:
-                self.temp_item.p_list.append((x, y))
+                self.temp_item.p_list.append([x, y])
                 self.temp_item.algorithm = self.temp_algorithm
             if self.status == 'polygon':
                 self.temp_item.adjust()
@@ -129,6 +142,12 @@ class MyCanvas(QGraphicsView):
             self.temp_item = MyItem(self.temp_id, self.status, [x, y], self.temp_algorithm)
         elif self.status == 'clip':
             self.temp_item = MyItem(self.temp_id, self.status, [[x, y], [x, y]], self.temp_algorithm)
+        elif self.status == 'text':
+            self.temp_item = MyItem(self.temp_id, self.status, [[x, y], [x, y]], self.temp_algorithm)
+            self.scene().addItem(self.temp_item)
+            self.item_dict[self.temp_id] = self.temp_item
+            self.selection_changed(self.temp_id)
+            self.status = 'text'
         else:
             for key, item in self.item_dict.items():
                 if item.contains(x, y):
@@ -141,12 +160,15 @@ class MyCanvas(QGraphicsView):
         pos = self.mapToScene(event.localPos().toPoint())
         x = int(pos.x())
         y = int(pos.y())
-        if self.status == 'line' or self.status == 'ellipse':
+        if self.status in ['translate', 'rotate', 'scale'] and self.selected_id == "":
+            super().mouseMoveEvent(event)
+            return
+        if self.status in ['line', 'ellipse']:
             self.temp_item.p_list[1] = [x, y]
         elif self.status == 'polygon' or self.status == 'curve':
             self.temp_item.p_list[-1] = [x, y]
-            if self.status == 'polygon':
-                self.temp_item.adjust()
+            # if self.status == 'polygon':
+            #     self.temp_item.adjust()
         elif self.status == 'translate':
             item = self.item_dict[self.selected_id]
             self.item_dict[self.selected_id].p_list = alg.translate(item.p_list, x - self.temp_item.p_list[0],
@@ -178,11 +200,16 @@ class MyCanvas(QGraphicsView):
             scale = abs((x - cx) / (width / 2))
             self.item_dict[self.selected_id].p_list = alg.scale(item.p_list, cx, cy, scale)
             self.temp_item.p_list = [x, y]
+        elif self.status == 'text':
+            self.item_dict[self.selected_id].p_list[1] = [x, y]
+            self.item_dict[self.selected_id].update()
         self.updateScene([self.sceneRect()])
         super().mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:
-        if self.status in ['line', 'ellipse']:
+        if self.status in ['translate', 'rotate', 'scale', 'clip'] and self.selected_id == "":
+            warnbox = QMessageBox.warning(self, "警告", "请选择图元")
+        elif self.status in ['line', 'ellipse']:
             self.updateScene([self.sceneRect()])
             self.item_dict[self.temp_id] = self.temp_item
             # self.list_widget.addItem(self.temp_id)
@@ -206,12 +233,23 @@ class MyCanvas(QGraphicsView):
             y_max = max(y, self.temp_item.p_list[0][1])
             self.item_dict[self.selected_id].p_list = alg.clip(item.p_list, x_min, y_min, x_max, y_max,
                                                                self.temp_item.algorithm)
+            if self.item_dict[self.selected_id].item_type == 'polygon':
+                self.item_dict[self.selected_id].adjust()
+            if not self.item_dict[self.selected_id].p_list:
+                del self.item_dict[self.selected_id]
+                self.selected_id = ''
             self.updateScene([self.sceneRect()])
+        elif self.status == 'text':
+            self.updateScene([self.sceneRect()])
+            self.finish_draw()
+            self.status = ""
 
         super().mouseReleaseEvent(event)
 
     def save_scene(self):
         save_name, _ = QFileDialog.getSaveFileName(self, 'Save Picture', '../imgs', 'Files (*.bmp)')
+        if len(save_name) == 0:
+            return
         canvas = np.zeros([self.height(), self.width(), 3], np.uint8)
         canvas.fill(255)
         for item in self.item_dict.values():
@@ -227,10 +265,18 @@ class MyCanvas(QGraphicsView):
                 pixels = alg.draw_ellipse(p_list)
             elif item_type == 'curve':
                 pixels = alg.draw_curve(p_list, algorithm)
+            elif item == 'text':
+                continue
             for x, y in pixels:
                 canvas[y, x] = color
 
         Image.fromarray(canvas).save(os.path.join(save_name + '.bmp'), 'bmp')
+
+    def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
+        key = event.text()
+        if self.selected_id and self.item_dict[self.selected_id].item_type == 'text':
+            self.item_dict[self.selected_id].str += key
+            self.item_dict[self.selected_id].update()
 
 
 class MyItem(QGraphicsItem):
@@ -257,6 +303,9 @@ class MyItem(QGraphicsItem):
         self.color = self._color
         self.fill_color = QColor(255, 255, 255)
         self.isfill = False
+        if self.item_type == 'text':
+            self.str = ""
+            self.selected = True
 
     @classmethod
     def set_color(cls, color):
@@ -282,6 +331,8 @@ class MyItem(QGraphicsItem):
                 painter.drawRect(self.boundingRect())
         elif self.item_type == 'ellipse':
             item_pixels = alg.draw_ellipse(self.p_list)
+            if self.isfill:
+                self.fill(painter, self.fill_color)
             for p in item_pixels:
                 painter.drawPoint(*p)
             if self.selected:
@@ -291,6 +342,15 @@ class MyItem(QGraphicsItem):
             item_pixels = alg.draw_curve(self.p_list[:], self.algorithm)
             for p in item_pixels:
                 painter.drawPoint(*p)
+            if self.selected:
+                painter.setPen(QColor(255, 0, 0))
+                painter.drawRect(self.boundingRect())
+        elif self.item_type == 'text':
+            font = QFont()
+            width = abs(self.p_list[1][1] - self.p_list[0][1])
+            font.setPointSize(int(width / 2))
+            painter.setFont(font)
+            painter.drawText(self.p_list[0][0], self.p_list[1][1] - int(width / 4), self.str)
             if self.selected:
                 painter.setPen(QColor(255, 0, 0))
                 painter.drawRect(self.boundingRect())
@@ -311,6 +371,8 @@ class MyItem(QGraphicsItem):
         return QRectF(x0 - 1, y0 - 1, w + 2, h + 2)
 
     def adjust(self):
+        if not self.p_list:
+            return
         cx = 0
         cy = 0
         for x, y in self.p_list:
@@ -390,9 +452,40 @@ class MyItem(QGraphicsItem):
                     pixels = alg.draw_line([(round(AET[k][0]), i), (round(AET[k + 1][0]), i)], 'DDA')
                     for p in pixels:
                         painter.drawPoint(*p)
+        elif self.item_type == 'ellipse':
+            x0, y0 = self.p_list[0]
+            x1, y1 = self.p_list[1]
+            midx = (x0 + x1) / 2
+            midy = (y0 + y1) / 2
+            a = abs(x0 - x1) / 2
+            b = abs(y0 - y1) / 2
+            height2 = b * b
+            width2 = a * a
+            hw2 = height2 * width2
+            x0 = a
+            dx = 0
+            pixels = alg.draw_line([(round(midx - a), round(midy)), (round(midx + a), round(midy))], 'DDA')
+            for p in pixels:
+                painter.drawPoint(*p)
+            for y in range(1, round(b + 1)):
+                x1 = x0 - (dx - 1)
+                while x1 > 0:
+                    if x1 * x1 * height2 + y * y * width2 <= hw2:
+                        break
+                    x1 = x1 - 1
+                dx = x0 - x1
+                x0 = x1
+                pixels = alg.draw_line([(round(midx - x0), round(midy + y)), (round(midx + x0), round(midy + y))],
+                                       'DDA')
+                for p in pixels:
+                    painter.drawPoint(*p)
+                pixels = alg.draw_line([(round(midx - x0), round(midy - y)), (round(midx + x0), round(midy - y))],
+                                       'DDA')
+                for p in pixels:
+                    painter.drawPoint(*p)
 
 
-class MainWindow(QMainWindow,Ui_MainWindow):
+class MainWindow(QMainWindow, Ui_MainWindow):
     """
     主窗口类
     """
@@ -435,12 +528,14 @@ class MainWindow(QMainWindow,Ui_MainWindow):
         self.action_polygon2.triggered.connect(self.polygon_action)
         self.action_ellipse2.triggered.connect(self.ellipse_action)
         self.action_curve2.triggered.connect(self.curve_action)
+        self.action_text.triggered.connect(self.text_action)
         self.action_move2.triggered.connect(self.translate_action)
         self.action_rotate2.triggered.connect(self.rotate_action)
         self.action_scale2.triggered.connect(self.scale_action)
         self.action_clip2.triggered.connect(self.clip_action)
         self.action_pen.triggered.connect(self.get_color)
         self.action_fill.triggered.connect(self.fill_action)
+        self.action_down.triggered.connect(self.canvas_widget.downitem)
         self.action1.triggered.connect(self.reset)
         self.action2.triggered.connect(self.canvas_widget.save_scene)
         self.pushButton.clicked.connect(self.get_color)
@@ -452,6 +547,10 @@ class MainWindow(QMainWindow,Ui_MainWindow):
             'background-color:rgb({},{},{});'.format(self.fill_color.red(), self.fill_color.green(),
                                                      self.fill_color.blue()))
 
+    def closeEvent(self, a0: QtGui.QCloseEvent) -> None:
+        message = QMessageBox.question(self, "退出", "是否保存已有画布", QMessageBox.Yes | QMessageBox.No)
+        if message == QMessageBox.Yes:
+            self.canvas_widget.save_scene()
 
     def set_fill_color(self):
         self.fill_color = QColorDialog.getColor()
@@ -511,7 +610,7 @@ class MainWindow(QMainWindow,Ui_MainWindow):
 
     def fill_action(self):
         id = self.canvas_widget.selected_id
-        if id and self.canvas_widget.item_dict[id].item_type == 'polygon':
+        if id and self.canvas_widget.item_dict[id].item_type in ['polygon', 'ellipse']:
             self.canvas_widget.item_dict[id].isfill = True
             self.canvas_widget.item_dict[id].fill_color = self.fill_color
             self.scene.update()
@@ -601,6 +700,10 @@ class MainWindow(QMainWindow,Ui_MainWindow):
         self.statusBar().showMessage('缩放变换')
 
     def clip_action(self):
+        id = self.canvas_widget.selected_id
+        if id and self.canvas_widget.item_dict[id].item_type == 'polygon':
+            self.clip_Sutherland_Hodgman_action()
+            return
         if self.default_alg[2] == 'liang_barsky':
             self.clip_liang_barsky_action()
         else:
@@ -615,6 +718,14 @@ class MainWindow(QMainWindow,Ui_MainWindow):
         self.default_alg[2] = 'liang_barsky'
         self.canvas_widget.start_draw('clip', 'liang_barsky')
         self.statusBar().showMessage('liang_barsky算法线段裁剪')
+
+    def clip_Sutherland_Hodgman_action(self):
+        self.canvas_widget.start_draw('clip', 'Sutherland-Hodgman')
+        self.statusBar().showMessage('Sutherland-Hodgman算法多边形裁剪')
+
+    def text_action(self):
+        self.canvas_widget.start_draw('text', '', self.get_id())
+        self.statusBar().showMessage('添加文本框')
 
 
 if __name__ == '__main__':

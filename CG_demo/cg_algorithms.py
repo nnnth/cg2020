@@ -3,7 +3,6 @@
 
 # 本文件只允许依赖math库
 import math
-from functools import cmp_to_key
 
 
 def sign(x):
@@ -33,7 +32,7 @@ def sign(x):
 #             return -sign(det)
 #
 #     return pointcmp
-def pointcmp(a, b,center):
+def pointcmp(a, b, center):
     x0, y0 = a
     x1, y1 = b
     x, y = center
@@ -47,7 +46,7 @@ def pointcmp(a, b,center):
         d2 = (x1 - x) * (x1 - x) + (y1 - y) * (y1 - y)
         return d1 > d2
     else:
-        return det<0
+        return det < 0
 
 
 def draw_line(p_list, algorithm):
@@ -130,12 +129,12 @@ def draw_line(p_list, algorithm):
         result.append((x0, y0))
         for i in range(dx):
             if reverse:
-                x0 = x0 + (d< 0) * stepx
+                x0 = x0 + (d < 0) * stepx
                 y0 = y0 + stepy
             else:
                 x0 = x0 + stepx
                 y0 = y0 + (d < 0) * stepy
-            d = d + 2 * dy + 2 * (d <0) * dx
+            d = d + 2 * dy + 2 * (d < 0) * dx
             result.append((x0, y0))
 
     return result
@@ -280,11 +279,11 @@ def draw_curve(p_list, algorithm):
             while u <= 1:
                 u_2 = pow(u, 2)
                 x = 1 / 2 * (
-                            (u_2 - 2 * u + 1) * p_list[0][0] + (- 2 * u_2 + 2 * u + 1) * p_list[1][0] + u_2 * p_list[2][
-                        0])
+                        (u_2 - 2 * u + 1) * p_list[0][0] + (- 2 * u_2 + 2 * u + 1) * p_list[1][0] + u_2 * p_list[2][
+                    0])
                 y = 1 / 2 * (
-                            (u_2 - 2 * u + 1) * p_list[0][1] + (- 2 * u_2 + 2 * u + 1) * p_list[1][1] + u_2 * p_list[2][
-                        1])
+                        (u_2 - 2 * u + 1) * p_list[0][1] + (- 2 * u_2 + 2 * u + 1) * p_list[1][1] + u_2 * p_list[2][
+                    1])
                 result.append((round(x), round(y)))
                 u = u + 0.001
             return result
@@ -364,6 +363,41 @@ def test(p, q, u1, u2):
     return u1 <= u2, u1, u2
 
 
+def inwindow(point, x0, y0, x1, y1):
+    a = (x1 - x0, y1 - y0)
+    b = (point[0] - x0, point[1] - y0)
+    return (a[0] * b[1] - a[1] * b[0]) <= 0
+
+
+def meetpoint(point1, point2, x0, y0, x1, y1):
+    if x0 == x1:
+        u = (x0 - point1[0]) / (point2[0] - point1[0])
+        my = round(point1[1] + u * (point2[1] - point1[1]))
+        mx = x0
+    elif y0 == y1:
+        u = (y0 - point1[1]) / (point2[1] - point1[1])
+        mx = round(point1[0] + u * (point2[0] - point1[0]))
+        my = y0
+    return (mx, my)
+
+
+def bordercheck(p_list, x0, y0, x1, y1):
+    p_list.append(p_list[0])
+    res = []
+    flag = inwindow(p_list[0], x0, y0, x1, y1)
+    for i in range(1, len(p_list)):
+        if inwindow(p_list[i], x0, y0, x1, y1):
+            res.append(p_list[i])
+            if flag == 0:
+                res.append(meetpoint(p_list[i - 1], p_list[i], x0, y0, x1, y1))
+                flag = 1
+        else:
+            if flag:
+                res.append(meetpoint(p_list[i - 1], p_list[i], x0, y0, x1, y1))
+                flag = 0
+    return res
+
+
 def clip(p_list, x_min, y_min, x_max, y_max, algorithm):
     """线段裁剪
 
@@ -405,7 +439,7 @@ def clip(p_list, x_min, y_min, x_max, y_max, algorithm):
                 u = (x_min - x0) / (x1 - x0)
                 y0 = round(y0 + u * (y1 - y0))
                 x0 = x_min
-    else:
+    elif algorithm == "liang_barsky":
         u1, u2 = 0, 1
         dx = x1 - x0
         dy = y1 - y0
@@ -420,5 +454,11 @@ def clip(p_list, x_min, y_min, x_max, y_max, algorithm):
         x0 = round(x0 + u1 * dx)
         y0 = round(y0 + u1 * dy)
         return [(x0, y0), (x1, y1)]
+    elif algorithm == 'Sutherland-Hodgman':
+        res = bordercheck(p_list, x_min, y_min, x_min, y_max)
+        res = bordercheck(res, x_min, y_max, x_max, y_max)
+        res = bordercheck(res, x_max, y_max, x_max, y_min)
+        res = bordercheck(res, x_max, y_min, x_min, y_min)
+        return res
 
 # if __name__ == '__main__':
