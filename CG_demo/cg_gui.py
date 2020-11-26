@@ -37,18 +37,6 @@ from PyQt5.QtCore import QRectF, QPointF
 def pointcmp(a, b, center):
     x0, y0 = a
     x1, y1 = b
-    x, y = center
-    # if x0 >= center[0] > x1:
-    #     return True
-    # if x0 == center[0] and x1 == center[0]:
-    #     return y0 > y1
-    # det = (x0 - x) * (y1 - y) - (x1 - x) * (y0 - y)
-    # if det == 0:
-    #     d1 = (x0 - x) * (x0 - x) + (y0 - y) * (y0 - y)
-    #     d2 = (x1 - x) * (x1 - x) + (y1 - y) * (y1 - y)
-    #     return d1 > d2
-    # else:
-    #     return det < 0
     return math.atan2(y1 - center[1], x1 - center[0]) > math.atan2(y0 - center[1], x0 - center[0])
 
 
@@ -60,7 +48,6 @@ class MyCanvas(QGraphicsView):
     def __init__(self, *args):
         super().__init__(*args)
         self.main_window = None
-        # self.list_widget = None
         self.item_dict = {}
         self.selected_id = ''
 
@@ -136,8 +123,8 @@ class MyCanvas(QGraphicsView):
             else:
                 self.temp_item.p_list.append([x, y])
                 self.temp_item.algorithm = self.temp_algorithm
-            if self.status == 'polygon':
-                self.temp_item.adjust()
+            # if self.status == 'polygon':
+            #     self.temp_item.adjust()
         elif self.status in ['translate', 'rotate', 'scale']:
             self.temp_item = MyItem(self.temp_id, self.status, [x, y], self.temp_algorithm)
         elif self.status == 'clip':
@@ -212,12 +199,9 @@ class MyCanvas(QGraphicsView):
         elif self.status in ['line', 'ellipse']:
             self.updateScene([self.sceneRect()])
             self.item_dict[self.temp_id] = self.temp_item
-            # self.list_widget.addItem(self.temp_id)
             self.finish_draw()
         elif self.status in ['polygon', 'curve']:
             self.updateScene([self.sceneRect()])
-            # if not self.item_dict.get(self.temp_id):
-            #     self.list_widget.addItem(self.temp_id)
             if self.status == 'polygon':
                 self.temp_item.adjust()
             self.item_dict[self.temp_id] = self.temp_item
@@ -497,10 +481,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.default_alg = ['Bresenham', 'Bezier', 'liang_barsky']
         self.fill_color = QColor(255, 255, 255)
 
-        # 使用QListWidget来记录已有的图元，并用于选择图元。注：这是图元选择的简单实现方法，更好的实现是在画布中直接用鼠标选择图元
-        # self.list_widget = QListWidget(self)
-        # self.list_widget.setMinimumWidth(200)
-        # self.list_widget.setGeometry(640, 160, 100, 420)
 
         # 使用QGraphicsView作为画布
         self.scene = QGraphicsScene(self)
@@ -508,7 +488,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.canvas_widget = MyCanvas(self.scene, self.centralWidget())
         self.canvas_widget.setFixedSize(600, 600)
         self.canvas_widget.main_window = self
-        # self.canvas_widget.list_widget = self.list_widget
 
         self.action_DDA.triggered.connect(self.line_dda_action)
         self.action_click.triggered.connect(self.canvas_widget.start_select)
@@ -528,7 +507,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.action_polygon2.triggered.connect(self.polygon_action)
         self.action_ellipse2.triggered.connect(self.ellipse_action)
         self.action_curve2.triggered.connect(self.curve_action)
-        self.action_text.triggered.connect(self.text_action)
+        #self.action_text.triggered.connect(self.text_action)
         self.action_move2.triggered.connect(self.translate_action)
         self.action_rotate2.triggered.connect(self.rotate_action)
         self.action_scale2.triggered.connect(self.scale_action)
@@ -571,7 +550,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                      color.blue()))
 
     def resetCanvas(self, x, y):
-        # self.canvas_widget.list_widget.clear()
         self.canvas_widget.item_dict = {}
         self.canvas_widget.status = ''
         self.canvas_widget.selected_id = ''
@@ -624,21 +602,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def line_naive_action(self):
         self.canvas_widget.start_draw('line', 'Naive', self.get_id())
         self.statusBar().showMessage('Naive算法绘制线段')
-        # self.list_widget.clearSelection()
         self.canvas_widget.clear_selection()
 
     def line_dda_action(self):
         self.default_alg[0] = 'DDA'
-        self.canvas_widget.start_draw('line', 'middle', self.get_id())
-        self.statusBar().showMessage('middle算法绘制线段')
-        # self.list_widget.clearSelection()
+        self.canvas_widget.start_draw('line', 'DDA', self.get_id())
+        self.statusBar().showMessage('DDA算法绘制线段')
         self.canvas_widget.clear_selection()
 
     def line_Bresenham_action(self):
         self.default_alg[0] = 'Bresenham'
         self.canvas_widget.start_draw('line', 'Bresenham', self.get_id())
         self.statusBar().showMessage('Bresenham算法绘制线段')
-        # self.list_widget.clearSelection()
         self.canvas_widget.clear_selection()
 
     def polygon_action(self):
@@ -651,7 +626,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.default_alg[0] = 'DDA'
         self.canvas_widget.start_draw('polygon', 'DDA', self.get_id())
         self.statusBar().showMessage('DDA算法绘制多边形')
-        # self.list_widget.clearSelection()
         self.canvas_widget.clear_selection()
 
     def polygon_Bresenham_action(self):
@@ -664,7 +638,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def ellipse_action(self):
         self.canvas_widget.start_draw('ellipse', '中点圆生成算法', self.get_id())
         self.statusBar().showMessage('中点圆生成算法绘制椭圆')
-        # self.list_widget.clearSelection()
         self.canvas_widget.clear_selection()
 
     def curve_action(self):
@@ -677,14 +650,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.default_alg[1] = 'Bezier'
         self.canvas_widget.start_draw('curve', 'Bezier', self.get_id())
         self.statusBar().showMessage('Bezier绘制曲线')
-        # self.list_widget.clearSelection()
         self.canvas_widget.clear_selection()
 
     def curve_b_spline_action(self):
         self.default_alg[1] = 'b_spline'
         self.canvas_widget.start_draw('curve', 'b_spline', self.get_id())
         self.statusBar().showMessage('三次均匀B样条绘制曲线')
-        # self.list_widget.clearSelection()
         self.canvas_widget.clear_selection()
 
     def translate_action(self):

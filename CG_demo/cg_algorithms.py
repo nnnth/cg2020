@@ -382,6 +382,8 @@ def meetpoint(point1, point2, x0, y0, x1, y1):
 
 
 def bordercheck(p_list, x0, y0, x1, y1):
+    if not p_list:
+        return
     p_list.append(p_list[0])
     res = []
     flag = inwindow(p_list[0], x0, y0, x1, y1)
