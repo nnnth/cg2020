@@ -17,8 +17,6 @@ from PyQt5.QtWidgets import (
     QGraphicsScene,
     QGraphicsView,
     QGraphicsItem,
-    QListWidget,
-    QHBoxLayout,
     QWidget,
     QStyleOptionGraphicsItem,
     QColorDialog,
@@ -29,9 +27,10 @@ from PyQt5.QtWidgets import (
     QDialogButtonBox,
     QFileDialog,
     QMessageBox,
-    QLineEdit)
-from PyQt5.QtGui import QPainter, QMouseEvent, QColor, QFont
-from PyQt5.QtCore import QRectF, QPointF
+    QTextEdit)
+from PyQt5.QtGui import QPainter, QMouseEvent, QColor
+from PyQt5.QtCore import QRectF,QUrl
+from PyQt5.QtWebEngineWidgets import QWebEngineView
 
 
 def pointcmp(a, b, center):
@@ -55,6 +54,22 @@ class MyCanvas(QGraphicsView):
         self.temp_algorithm = ''
         self.temp_id = ''
         self.temp_item = None
+        self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.customContextMenuRequested.connect(self.rightMenuShow)
+
+    def rightMenuShow(self):
+        if self.selected_id != "":
+            self.contextMenu = QtWidgets.QMenu()
+            self.actionA = self.contextMenu.addAction("删除")
+            self.contextMenu.popup(QtGui.QCursor.pos())  # 2菜单显示的位置
+            self.actionA.triggered.connect(self.actionHandler)
+            self.contextMenu.show()
+
+    def actionHandler(self):
+        self.scene().removeItem(self.item_dict[self.selected_id])
+        del self.item_dict[self.selected_id]
+        self.selected_id = ""
+        self.updateScene([self.sceneRect()])
 
     def start_draw(self, status, algorithm='', item_id=None):
         self.temp_item = None
@@ -104,12 +119,17 @@ class MyCanvas(QGraphicsView):
     def downitem(self):
         if self.selected_id != "":
             item = self.item_dict[self.selected_id]
+            # self.scene().removeItem(item)
             del self.item_dict[self.selected_id]
             self.item_dict["%d" % (int(self.temp_id) + 1)] = item
             self.selected_id = "%d" % (int(self.temp_id) + 1)
+            print(self.selected_id)
             self.finish_draw()
 
     def mousePressEvent(self, event: QMouseEvent) -> None:
+        if self.status in ['translate', 'rotate', 'scale', 'clip'] and self.selected_id == "":
+            QMessageBox.warning(self, "警告", "请选择图元")
+            return
         pos = self.mapToScene(event.localPos().toPoint())
         x = int(pos.x())
         y = int(pos.y())
@@ -129,12 +149,8 @@ class MyCanvas(QGraphicsView):
             self.temp_item = MyItem(self.temp_id, self.status, [x, y], self.temp_algorithm)
         elif self.status == 'clip':
             self.temp_item = MyItem(self.temp_id, self.status, [[x, y], [x, y]], self.temp_algorithm)
-        elif self.status == 'text':
-            self.temp_item = MyItem(self.temp_id, self.status, [[x, y], [x, y]], self.temp_algorithm)
             self.scene().addItem(self.temp_item)
             self.item_dict[self.temp_id] = self.temp_item
-            self.selection_changed(self.temp_id)
-            self.status = 'text'
         else:
             for key, item in self.item_dict.items():
                 if item.contains(x, y):
@@ -152,7 +168,7 @@ class MyCanvas(QGraphicsView):
             return
         if self.status in ['line', 'ellipse']:
             self.temp_item.p_list[1] = [x, y]
-        elif self.status == 'polygon' or self.status == 'curve':
+        elif self.status in ['polygon', 'curve', 'clip']:
             self.temp_item.p_list[-1] = [x, y]
             # if self.status == 'polygon':
             #     self.temp_item.adjust()
@@ -187,16 +203,11 @@ class MyCanvas(QGraphicsView):
             scale = abs((x - cx) / (width / 2))
             self.item_dict[self.selected_id].p_list = alg.scale(item.p_list, cx, cy, scale)
             self.temp_item.p_list = [x, y]
-        elif self.status == 'text':
-            self.item_dict[self.selected_id].p_list[1] = [x, y]
-            self.item_dict[self.selected_id].update()
         self.updateScene([self.sceneRect()])
         super().mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:
-        if self.status in ['translate', 'rotate', 'scale', 'clip'] and self.selected_id == "":
-            warnbox = QMessageBox.warning(self, "警告", "请选择图元")
-        elif self.status in ['line', 'ellipse']:
+        if self.status in ['line', 'ellipse']:
             self.updateScene([self.sceneRect()])
             self.item_dict[self.temp_id] = self.temp_item
             self.finish_draw()
@@ -210,6 +221,8 @@ class MyCanvas(QGraphicsView):
             x = int(pos.x())
             y = int(pos.y())
             item = self.item_dict[self.selected_id]
+            print("clip selected",self.selected_id)
+            print("temp_id",self.temp_id)
             self.temp_item.p_list[1] = (x, y)
             x_min = min(x, self.temp_item.p_list[0][0])
             x_max = max(x, self.temp_item.p_list[0][0])
@@ -222,11 +235,9 @@ class MyCanvas(QGraphicsView):
             if not self.item_dict[self.selected_id].p_list:
                 del self.item_dict[self.selected_id]
                 self.selected_id = ''
+            self.scene().removeItem(self.temp_item)
+            del self.item_dict[self.temp_id]
             self.updateScene([self.sceneRect()])
-        elif self.status == 'text':
-            self.updateScene([self.sceneRect()])
-            self.finish_draw()
-            self.status = ""
 
         super().mouseReleaseEvent(event)
 
@@ -249,18 +260,10 @@ class MyCanvas(QGraphicsView):
                 pixels = alg.draw_ellipse(p_list)
             elif item_type == 'curve':
                 pixels = alg.draw_curve(p_list, algorithm)
-            elif item == 'text':
-                continue
             for x, y in pixels:
                 canvas[y, x] = color
 
         Image.fromarray(canvas).save(os.path.join(save_name + '.bmp'), 'bmp')
-
-    def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
-        key = event.text()
-        if self.selected_id and self.item_dict[self.selected_id].item_type == 'text':
-            self.item_dict[self.selected_id].str += key
-            self.item_dict[self.selected_id].update()
 
 
 class MyItem(QGraphicsItem):
@@ -287,9 +290,6 @@ class MyItem(QGraphicsItem):
         self.color = self._color
         self.fill_color = QColor(255, 255, 255)
         self.isfill = False
-        if self.item_type == 'text':
-            self.str = ""
-            self.selected = True
 
     @classmethod
     def set_color(cls, color):
@@ -329,15 +329,9 @@ class MyItem(QGraphicsItem):
             if self.selected:
                 painter.setPen(QColor(255, 0, 0))
                 painter.drawRect(self.boundingRect())
-        elif self.item_type == 'text':
-            font = QFont()
-            width = abs(self.p_list[1][1] - self.p_list[0][1])
-            font.setPointSize(int(width / 2))
-            painter.setFont(font)
-            painter.drawText(self.p_list[0][0], self.p_list[1][1] - int(width / 4), self.str)
-            if self.selected:
-                painter.setPen(QColor(255, 0, 0))
-                painter.drawRect(self.boundingRect())
+        elif self.item_type == 'clip':
+            painter.setPen(QColor(0, 0, 255))
+            painter.drawRect(self.boundingRect())
 
     def boundingRect(self) -> QRectF:
         x0, x1, y0, y1 = 20000, 0, 20000, 0
@@ -390,8 +384,8 @@ class MyItem(QGraphicsItem):
             midy = (y0 + y1) / 2
             a = abs(x0 - x1) / 2
             b = abs(y0 - y1) / 2
-            # if a == 0 or b == 0:
-            #     return False
+            if a == 0 or b == 0:
+                return False
             print((pow(x - midx, 2) / pow(a, 2) + pow(y - midy, 2) / pow(b, 2)))
             return (pow(x - midx, 2) / pow(a, 2) + pow(y - midy, 2) / pow(b, 2)) <= 1
         else:
@@ -481,7 +475,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.default_alg = ['Bresenham', 'Bezier', 'liang_barsky']
         self.fill_color = QColor(255, 255, 255)
 
-
         # 使用QGraphicsView作为画布
         self.scene = QGraphicsScene(self)
         self.scene.setSceneRect(0, 0, 600, 600)
@@ -507,7 +500,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.action_polygon2.triggered.connect(self.polygon_action)
         self.action_ellipse2.triggered.connect(self.ellipse_action)
         self.action_curve2.triggered.connect(self.curve_action)
-        #self.action_text.triggered.connect(self.text_action)
         self.action_move2.triggered.connect(self.translate_action)
         self.action_rotate2.triggered.connect(self.rotate_action)
         self.action_scale2.triggered.connect(self.scale_action)
@@ -525,6 +517,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.pushButton_2.setStyleSheet(
             'background-color:rgb({},{},{});'.format(self.fill_color.red(), self.fill_color.green(),
                                                      self.fill_color.blue()))
+        self.menu_help.triggered.connect(self.showhelp)
+
+    def showhelp(self):
+        helpwidget = QDialog()
+        helpwidget.setGeometry(300,300,500,500)
+        helpwidget.setWindowTitle("帮助文档")
+        text = QTextEdit(helpwidget)
+        with open("../help.txt",'r',encoding='utf-8') as f:
+            s = f.read()
+        text.setText(s)
+        text.resize(helpwidget.size())
+        helpwidget.exec_()
+        print("jj")
 
     def closeEvent(self, a0: QtGui.QCloseEvent) -> None:
         message = QMessageBox.question(self, "退出", "是否保存已有画布", QMessageBox.Yes | QMessageBox.No)
@@ -675,28 +680,33 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if id and self.canvas_widget.item_dict[id].item_type == 'polygon':
             self.clip_Sutherland_Hodgman_action()
             return
-        if self.default_alg[2] == 'liang_barsky':
+        if self.default_alg[2] == 'Liang-Barsky':
             self.clip_liang_barsky_action()
         else:
             self.clip_cohen_sutherland_action()
 
     def clip_cohen_sutherland_action(self):
-        self.default_alg[2] = 'Cohen-Sutherland'
-        self.canvas_widget.start_draw('clip', 'Cohen-Sutherland')
-        self.statusBar().showMessage('Cohen-Sutherland算法线段裁剪')
+        id = self.canvas_widget.selected_id
+        if id and self.canvas_widget.item_dict[id].item_type == 'line':
+            self.default_alg[2] = 'Cohen-Sutherland'
+            self.canvas_widget.start_draw('clip', 'Cohen-Sutherland',self.get_id())
+            self.statusBar().showMessage('Cohen-Sutherland算法线段裁剪')
+        else:
+            QMessageBox.warning(self, "警告", "仅线段和多边形可裁剪")
 
     def clip_liang_barsky_action(self):
-        self.default_alg[2] = 'liang_barsky'
-        self.canvas_widget.start_draw('clip', 'liang_barsky')
-        self.statusBar().showMessage('liang_barsky算法线段裁剪')
+        id = self.canvas_widget.selected_id
+        if id and self.canvas_widget.item_dict[id].item_type == 'line':
+            self.default_alg[2] = 'Liang-Barsky'
+            self.canvas_widget.start_draw('clip', 'Liang-Barsky',self.get_id())
+            self.statusBar().showMessage('liang_barsky算法线段裁剪')
+        else:
+            QMessageBox.warning(self, "警告", "仅线段和多边形可裁剪")
 
     def clip_Sutherland_Hodgman_action(self):
-        self.canvas_widget.start_draw('clip', 'Sutherland-Hodgman')
+        self.canvas_widget.start_draw('clip', 'Sutherland-Hodgman',self.get_id())
         self.statusBar().showMessage('Sutherland-Hodgman算法多边形裁剪')
 
-    def text_action(self):
-        self.canvas_widget.start_draw('text', '', self.get_id())
-        self.statusBar().showMessage('添加文本框')
 
 
 if __name__ == '__main__':

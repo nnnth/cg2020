@@ -5,50 +5,6 @@
 import math
 
 
-def sign(x):
-    if x > 0:
-        return 1
-    elif x < 0:
-        return -1
-    else:
-        return 0
-
-
-# def getcmp(center):
-#     def pointcmp(a, b):
-#         x0, y0 = a
-#         x1, y1 = b
-#         x, y = center
-#         if x0 > x1:
-#             return 1
-#         if x0 == x1:
-#             return sign(y0 > y1)
-#         det = (x0 - x) * (y1 - y) - (x1 - x) * (y0 - y)
-#         if det == 0:
-#             d1 = (x0 - x) * (x0 - x) + (y0 - y) * (y0 - y)
-#             d2 = (x1 - x) * (x1 - x) + (y1 - y) * (y1 - y)
-#             return sign(d1 > d2)
-#         else:
-#             return -sign(det)
-#
-#     return pointcmp
-def pointcmp(a, b, center):
-    x0, y0 = a
-    x1, y1 = b
-    x, y = center
-    if x0 > x1:
-        return True
-    if x0 == x1:
-        return y0 > y1
-    det = (x0 - x) * (y1 - y) - (x1 - x) * (y0 - y)
-    if det == 0:
-        d1 = (x0 - x) * (x0 - x) + (y0 - y) * (y0 - y)
-        d2 = (x1 - x) * (x1 - x) + (y1 - y) * (y1 - y)
-        return d1 > d2
-    else:
-        return det < 0
-
-
 def draw_line(p_list, algorithm):
     """绘制线段
 
@@ -227,6 +183,23 @@ def draw_ellipse(p_list):
     return result
 
 
+def compute_lambda(u, i, r, t, k):
+    if r == k:
+        return 0
+    else:
+        return (t - u[i]) / (u[i + k - r] - u[i])
+
+
+def compute_p(p_list, u, i, r, t, k):
+    if r == 0:
+        return p_list[i]
+    else:
+        p_1 = compute_p(p_list, u, i, r - 1, t, k)
+        p_2 = compute_p(p_list, u, i - 1, r - 1, t, k)
+        lam = compute_lambda(u, i, r, t, k)
+        return [round(lam * p_1[0] + (1 - lam) * p_2[0]), round(lam * p_1[1] + (1 - lam) * p_2[1])]
+
+
 def draw_curve(p_list, algorithm):
     """绘制曲线
 
@@ -247,59 +220,23 @@ def draw_curve(p_list, algorithm):
             u = u + 0.002
             result.append((round(temp[0][0]), round(temp[0][1])))
     else:
-        # print(n)
-        # delta = 1 / (n + 4)
-        # u = [0]
-        # for i in range(1, n + 4):
-        #     u.append(u[i - 1] + delta)
-        # u.append(1)
-        # print(u)
-        # t = u[3]
-        # j = 3
-        # while t <= u[n + 1]:
-        #     temp = p_list[:]
-        #     j = int(t/ delta)
-        #     for r in range(1,4):
-        #         for i in range(j - 4 + r + 1, j + 1):
-        #             try:
-        #                 lam = (t - u[i]) / (u[i + 4 - r] - u[i])
-        #                 temp[j] = [lam * temp[j][0] + (1 - lam) * temp[j - 1][0],
-        #                            lam * temp[j][1] + (1 - lam) * temp[j - 1][1]]
-        #             except Exception:
-        #                 print(i,j,r)
-        #                 exit()
-        #     t = t + 0.002
-        #     result.append((round(temp[j][0]), round(temp[j][1])))
         if n == 0:
             return p_list
         elif n == 1:
             return draw_line(p_list, 'DDA')
-        elif n == 2:
-            u = 0
-            while u <= 1:
-                u_2 = pow(u, 2)
-                x = 1 / 2 * (
-                        (u_2 - 2 * u + 1) * p_list[0][0] + (- 2 * u_2 + 2 * u + 1) * p_list[1][0] + u_2 * p_list[2][
-                    0])
-                y = 1 / 2 * (
-                        (u_2 - 2 * u + 1) * p_list[0][1] + (- 2 * u_2 + 2 * u + 1) * p_list[1][1] + u_2 * p_list[2][
-                    1])
-                result.append((round(x), round(y)))
-                u = u + 0.001
-            return result
-        for i in range(n - 2):
-            u = 0
-            while u <= 1:
-                u_2 = pow(u, 2)
-                u_3 = pow(u, 3)
-                x = 1 / 6 * (
-                        (-u_3 + 3 * u_2 - 3 * u + 1) * p_list[i][0] + (3 * u_3 - 6 * u_2 + 4) * p_list[i + 1][0] + (
-                        -3 * u_3 + 3 * u_2 + 3 * u + 1) * p_list[i + 2][0] + u_3 * p_list[i + 3][0])
-                y = 1 / 6 * (
-                        (-u_3 + 3 * u_2 - 3 * u + 1) * p_list[i][1] + (3 * u_3 - 6 * u_2 + 4) * p_list[i + 1][1] + (
-                        -3 * u_3 + 3 * u_2 + 3 * u + 1) * p_list[i + 2][1] + u_3 * p_list[i + 3][1])
-                result.append((round(x), round(y)))
-                u = u + 0.01
+        k = 4
+        if n==2:
+            k = 3
+        delta = 1 / (n + k + 2)
+        u = [0]
+        for i in range(1, n + k + 2):
+            u.append(u[i - 1] + delta)
+        u.append(1)
+        for i in range(k - 1, n + 1):
+            t = u[i]
+            while t < u[i + 1]:
+                result.append(compute_p(p_list, u, i, k - 1, t, k))
+                t = t + 0.0005
     return result
 
 
@@ -383,7 +320,7 @@ def meetpoint(point1, point2, x0, y0, x1, y1):
 
 def bordercheck(p_list, x0, y0, x1, y1):
     if not p_list:
-        return
+        return []
     p_list.append(p_list[0])
     res = []
     flag = inwindow(p_list[0], x0, y0, x1, y1)
@@ -441,7 +378,7 @@ def clip(p_list, x_min, y_min, x_max, y_max, algorithm):
                 u = (x_min - x0) / (x1 - x0)
                 y0 = round(y0 + u * (y1 - y0))
                 x0 = x_min
-    elif algorithm == "liang_barsky":
+    elif algorithm == "Liang-Barsky":
         u1, u2 = 0, 1
         dx = x1 - x0
         dy = y1 - y0
@@ -463,4 +400,4 @@ def clip(p_list, x_min, y_min, x_max, y_max, algorithm):
         res = bordercheck(res, x_max, y_min, x_min, y_min)
         return res
 
-# if __name__ == '__main__':
+
