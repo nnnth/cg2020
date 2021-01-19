@@ -1,0 +1,2442 @@
+#LyX 2.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 544
+\begin_document
+\begin_header
+\save_transient_properties true
+\origin unavailable
+\textclass ctex-article
+\begin_preamble
+% 如果没有这一句命令，XeTeX会出错，原因参见
+% http://bbs.ctex.org/viewthread.php?tid=60547
+\DeclareRobustCommand\nobreakspace{\leavevmode\nobreak\ }
+\end_preamble
+\options UTF8
+\use_default_options true
+\maintain_unincluded_children false
+\language chinese-simplified
+\language_package none
+\inputencoding utf8-plain
+\fontencoding global
+\font_roman "default" "default"
+\font_sans "default" "default"
+\font_typewriter "default" "default"
+\font_math "auto" "auto"
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100 100
+\font_tt_scale 100 100
+\use_microtype false
+\use_dash_ligatures false
+\graphics default
+\default_output_format pdf4
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_package amsmath 1
+\use_package amssymb 1
+\use_package cancel 1
+\use_package esint 1
+\use_package mathdots 1
+\use_package mathtools 1
+\use_package mhchem 1
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
+\cite_engine basic
+\cite_engine_type default
+\biblio_style plain
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 1
+\use_minted 0
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+The below text refers to if we add 
+\begin_inset Quotes eld
+\end_inset
+
+adobefonts
+\begin_inset Quotes erd
+\end_inset
+
+ to the custom class options.
+ The text is outdated and will be updated to reflect this change soon.
+ The change was made because we no longer need proprietary fonts to compile
+ this document.
+ For example, it can be compiled with out-of-the-box TeX Live 2015.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+这是一份文章模板，如果要使用书籍或报告，请设置文档类为
+\family sans
+book (C\SpecialChar TeX
+)
+\family default
+或者
+\family sans
+report (C\SpecialChar TeX
+)
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Title
+《计算机图形学》12月报告
+\end_layout
+
+\begin_layout Author
+181860085，汤昊，1174639585@qq.com
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset toc
+LatexCommand tableofcontents
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+综述
+\end_layout
+
+\begin_layout Standard
+本系统的核心算法模块实现了绘制线段和多边形的DDA，Bresenham算法，绘制椭圆的中点椭圆算法，绘制曲线的Bezier，B_spline算法，图元的平移，旋
+转，缩放算法；裁剪操作的Cohen-Sutherland，Liang-Barsky算法以及多边形裁剪的逐边裁剪算法。命令行程序支持线段，多边形，椭圆和曲线的绘制
+，所有图元的平移 ，旋转和缩放以及线段图元的裁剪，且支持保存，重置画布和设置画笔颜色。GUI程序在支持命令行所有功能的基础上，新增了多边形裁剪，多边形和椭圆填充
+，删除图元，快捷键等功能。
+\end_layout
+
+\begin_layout Section
+算法介绍
+\end_layout
+
+\begin_layout Subsection
+绘制线段算法
+\end_layout
+
+\begin_layout Subsubsection
+DDA
+\end_layout
+
+\begin_layout Standard
+DDA算法是利用计算两个坐标方向的差分来确定线段显示的屏幕像素位置的线段扫描转换算法，也就是通过在一个坐标轴上以单位间隔对线段取样(
+\begin_inset Formula $\Delta x=1\text{或}\Delta y=1)$
+\end_inset
+
+，计算
+\begin_inset Formula $\Delta x$
+\end_inset
+
+或
+\begin_inset Formula $\Delta y$
+\end_inset
+
+决定另一个坐标轴上最靠近线段路径的对应整数值。算法首先计算水平差值和垂直差值，绝对值大的决定循环次数，在该方向间隔1取样，再由斜率决定另一个方向的坐标偏移量，最
+后取整得到下一步的坐标值，直到循环结束。
+\end_layout
+
+\begin_layout Standard
+设当前点为(
+\begin_inset Formula $x_{i},y_{i}$
+\end_inset
+
+)则用DDA算法求解(
+\begin_inset Formula $x_{i+1},y_{i+1}$
+\end_inset
+
+)的计算公式可以概括为：
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Formula $x_{i+1}=x_{i}+x_{step}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Formula $y_{i+1}=y_{i}+y_{step}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+通过计算 Δx 和 Δy 来确定
+\begin_inset Formula $x_{step}$
+\end_inset
+
+和
+\begin_inset Formula $y_{step}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+如果 Δx > Δy ，说明x轴的最大差值大于y轴的最大差值，x轴方向为步进的主方向，
+\begin_inset Formula $x_{step}$
+\end_inset
+
+ = 1，
+\begin_inset Formula $y_{step}$
+\end_inset
+
+ = k；
+\end_layout
+
+\begin_layout Itemize
+如果 Δy> Δx，说明y轴的最大差值大于x轴的最大差值，y轴方向为步进的主方向，
+\begin_inset Formula $y_{step}$
+\end_inset
+
+= 1，
+\begin_inset Formula $x_{step}=\frac{1}{k}$
+\end_inset
+
+ 。 
+\end_layout
+
+\begin_layout Standard
+若起始点在右边则
+\begin_inset Formula $x_{step}$
+\end_inset
+
+和
+\begin_inset Formula $y_{step}$
+\end_inset
+
+取负。根据以上公式，就能通过(
+\begin_inset Formula $x_{i},y_{i}$
+\end_inset
+
+)迭代计算出(
+\begin_inset Formula $x_{i+1},y_{i+1}$
+\end_inset
+
+)，然后在坐标系中绘制计算出的(x,y)坐标点。
+\end_layout
+
+\begin_layout Subsubsection
+Bresenham
+\end_layout
+
+\begin_layout Standard
+Bresenham算法通过引入整数参量定义来衡量两个候选像素与实际点在某方向的相对偏移，从而确定哪个像素位置更接近于线段路径。
+\end_layout
+
+\begin_layout Standard
+考虑斜率小于1的线段，假设当前以及确定显示像素在
+\begin_inset Formula $(x_{k},y_{k})$
+\end_inset
+
+，候选像素为
+\begin_inset Formula $(x_{k}+1,y_{k}+1)$
+\end_inset
+
+ 和
+\begin_inset Formula $(x_{k}+1,y_{k})$
+\end_inset
+
+。
+\end_layout
+
+\begin_layout Standard
+\begin_inset Graphics
+	filename bresenham.JPG
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+线段在
+\begin_inset Formula $x_{k}+1$
+\end_inset
+
+的真实坐标为
+\begin_inset Formula $y=mx_{k+1}+b=m(x_{k}+1)+b$
+\end_inset
+
+，两个候选像素与真实坐标的垂直偏移为：
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\begin{cases}
+d_{1}=y-y_{k}=m(x_{k}+1)+b-y_{k}\\
+d_{2}=y_{k+1}-y=y_{k}+1-m(x_{k}+1)+b
+\end{cases}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+两个距离的差值为：
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+d_{1}-d_{2}=2m(x_{k}+1)-2y_{k}+2b-1
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+设
+\begin_inset Formula $\Delta x$
+\end_inset
+
+和
+\begin_inset Formula $\Delta y$
+\end_inset
+
+分别为端点的水平和垂直偏移量，
+\begin_inset Formula $m=\frac{\Delta y}{\Delta x}$
+\end_inset
+
+，代入（1）式，得到决策变量的定义式为：
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+p_{k}=\Delta x(d_{1}-d_{2})=2\Delta yx_{k}-2\Delta xy_{k}+c
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+决策变量大于0时选择
+\begin_inset Formula $(x_{k}+1,y_{k}+1)$
+\end_inset
+
+ ，否则选择
+\begin_inset Formula $(x_{k}+1,y_{k})$
+\end_inset
+
+。
+\end_layout
+
+\begin_layout Standard
+每一次都通过（2）式计算决策变量十分繁琐，事实上，可以通过递增整数运算得到后继的决策整数值。第k+1步的决策参数为：
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+p_{k+1}=2\Delta yx_{k+1}-2\Delta xy_{k+1}+c
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+其中c是一个常量。用（3）式减去（2）式得到：
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+p_{k+1}=p_{k}+2\Delta y-2\Delta x(y_{k+1}-y_{k})
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+而
+\begin_inset Formula $y_{k+1}-y_{k}$
+\end_inset
+
+取决于
+\begin_inset Formula $p_{k}$
+\end_inset
+
+的符号，
+\begin_inset Formula $p_{k}>0$
+\end_inset
+
+则为1，否则为0
+\end_layout
+
+\begin_layout Standard
+故决策变量的递推式为：
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+p_{k+1}=\begin{cases}
+p_{k}+2\Delta y-2\Delta x & p_{k}>0\\
+p_{k}+2\Delta y & p_{k}<0
+\end{cases}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+将
+\begin_inset Formula $x_{0}$
+\end_inset
+
+代入（2）式，根据
+\begin_inset Formula $y_{0}=mx_{0}+b,m=\frac{\Delta y}{\Delta x}$
+\end_inset
+
+得到决策变量的初始值：
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+p_{0}=2\Delta y-\Delta x
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection
+DDA和Bresenham算法的对比
+\end_layout
+
+\begin_layout Paragraph
+速度对比
+\end_layout
+
+\begin_layout Standard
+绘制端点值为[(100, 200), (200, 250)]的直线1000次，DDA耗时0.2057s，Bresenham耗时0.1084s，几乎是DDA算法的一半
+。这是由于Bresenham算法通过引入决策变量的方式避免了浮点运算，通过递推的方式又减少了决策变量的运算量。
+\end_layout
+
+\begin_layout Paragraph
+精度对比
+\end_layout
+
+\begin_layout Standard
+和速度对比的测试用例一样，用坐标列表和实际值(浮点数)作比较，计算均方误差，DDA和Bresenham的MSE均为0.125，故两者在精度上没有差别
+\end_layout
+
+\begin_layout Subsection
+绘制多边形算法
+\end_layout
+
+\begin_layout Standard
+多边形可以看成是多个直线首尾相连而成，故可以直接调用绘制直线的算法生成，对于一个顶点列表，每两点之间调用DDA或Bresenham算法绘制直线，最后在起点和终点
+之间再连一条直线即可。
+\end_layout
+
+\begin_layout Subsection
+中点椭圆算法
+\end_layout
+
+\begin_layout Standard
+和绘制直线相似，每一步取样时都有两个候选像素可以选择。
+\end_layout
+
+\begin_layout Standard
+\begin_inset Graphics
+	filename 中点.JPG
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+对于形如
+\begin_inset Formula $(\frac{x-x_{c}}{r_{x}})^{2}+(\frac{y-y_{c}}{r_{y}})^{2}=1$
+\end_inset
+
+的椭圆，中点椭圆算法通过判断两个候选像素的中点是否在椭圆内决定下一步的坐标，若中点在椭圆内，则选择高像素，否则选择低像素。
+\end_layout
+
+\begin_layout Standard
+由于椭圆的对称性，只需要考虑第一象限。第一象限根据斜率(
+\begin_inset Formula $r_{x}<r_{y})$
+\end_inset
+
+又可以分为两部分，由区域1进入区域2的条件为：
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+2r_{y}^{2}x\geq2r_{x}^{2}y
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Graphics
+	filename 区域.JPG
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+对于区域1，斜率绝对值小于1，故在x方向取单位步长。定义决策变量
+\begin_inset Formula $p1_{k}$
+\end_inset
+
+为两个像素中间点代入椭圆函数的值：
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+p1_{k}=r_{y}^{2}(x_{k}+1)^{2}+r_{x}^{2}(y_{k}-\frac{1}{2})^{2}-r_{x}^{2}r_{y}^{2}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+类似Bresenham的推导，得到决策变量的初始值和递推式为：
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+P_{0}=r_{y}^{2}-r_{x}^{2}r_{y}+\frac{r_{x}^{2}}{4},p1_{k+1}=\begin{cases}
+p1_{k}+2r_{y}^{2}x_{k}+3r_{y}^{2} & p_{k}<0\\
+p1_{k}+2r_{y}^{2}x_{k}-2r_{x}^{2}y_{k}+2r_{x}^{2}+3r_{y}^{2} & p_{k}\geqslant0
+\end{cases}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+对于区域2，斜率绝对值大于1，故在y方向取单位步长。定义决策变量
+\begin_inset Formula $p2_{k},$
+\end_inset
+
+决策变量的初始值为区域1的最后一个值，递推式为：
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+p2_{k+1}=\begin{cases}
+p2_{k}-2r_{x}^{2}y_{k}+3r_{x}^{2} & p_{k}\leqslant0\\
+p2_{k}+2r_{y}^{2}x_{k}-2r_{x}^{2}y_{k}+2r_{y}^{2}+3r_{x}^{2} & p_{k}>0
+\end{cases}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+之后第一象限的坐标变换符号获得其他三个象限坐标，最后根据中心点整体平移。
+\end_layout
+
+\begin_layout Subsection
+绘制曲线算法
+\end_layout
+
+\begin_layout Subsubsection
+Bezier
+\end_layout
+
+\begin_layout Standard
+Bezier曲线是通过一组多边折现的各顶点唯一定义出来的，曲线的形状趋向于多边折线的形状，其中多边折现通常称为特征多边形，其顶点称为控制顶点。假设给出n+1个控
+制顶点
+\begin_inset Formula $P_{i}=(x_{i},y_{i},z_{i})(i=0,1,...,n),\text{则逼近曲线为}$
+\end_inset
+
+：
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+P(u)=\stackrel[i=0]{n}{\sum}P_{i}BEZ_{i,n}(u),0\leqslant u\leqslant1
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+其中
+\begin_inset Formula $BEZ_{i,n}(u)=C(n,i)u^{i}(1-u)^{n-i}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+采用de Casteljau递推式，对某一特定参数u，计算公式为：
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+P_{i}^{r}=\begin{cases}
+P_{i} & r=0\\
+(1-u)P_{i}^{r-1}+uP_{i+1}^{r-1} & r=1,2,...,n;i=0,1,...,n-r
+\end{cases}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Graphics
+	filename bezier.JPG
+	scale 60
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+r代表第r次取点，i代表取点的起点，首先从
+\begin_inset Formula $P_{0}^{0},P_{1}^{0},...,P_{n}^{0}$
+\end_inset
+
+这些点中两两连线，取出比例为u的点，得到
+\begin_inset Formula $P_{0}^{1},P_{1}^{1},...,P_{n-1}^{1}$
+\end_inset
+
+，再两两连线，取出比例为u的点，反复上述过程，直到最终只有一个点，即为n次Bezier曲线上的点P(u)
+\end_layout
+
+\begin_layout Subsubsection
+B_spline
+\end_layout
+
+\begin_layout Standard
+B样条曲线用B样条基函数代替Bernstein基函数，使曲线可以局部逼近。给定参数u(
+\begin_inset Formula $0\leqslant u\leqslant1)$
+\end_inset
+
+轴上的节点分割
+\begin_inset Formula $U_{n,k}=\{u_{i}\}(i=0,1,2,...,n+k)$
+\end_inset
+
+，则
+\begin_inset Formula $B_{i,k}(u)\text{为}U_{n,k}\text{上的}k\text{阶}B\text{样\text{条基函数}}$
+\end_inset
+
+，其递推式为：
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+B_{i,k}(u)=(\frac{u-u_{i}}{u_{i+k-1}-u_{i}})B_{i,k-1}(u)+(\frac{u_{i+k}-u_{i}}{u_{i+k}-u_{i+1}})B_{i+1,k-1}(u)
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+B_{i,1}(u)=\begin{cases}
+1 & u\in[u_{i},u_{i+1}]\\
+0 & u\notin[u_{i},u_{i+1}]
+\end{cases}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+因此节点分割的作用是为了判断参数在某一区间时
+\begin_inset Formula $B_{i,1}(u)$
+\end_inset
+
+的值， 
+\begin_inset Formula $B_{i,k}(u)$
+\end_inset
+
+。对于均匀B样条曲线来说，所有区间长度相同。
+\end_layout
+
+\begin_layout Standard
+设有n+1个控制顶点{
+\begin_inset Formula $P_{i}\}(i=0,1,2,...,n)$
+\end_inset
+
+及参数节点向量
+\begin_inset Formula $U_{n,k}=\{u_{i}\}(i=0,1,2,...,n+k)$
+\end_inset
+
+，参数曲线
+\begin_inset Formula $P(u)$
+\end_inset
+
+为k阶(k-1)次B样条曲线：
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+P\text{(u)=}\stackrel[i=0]{n}{\sum}P_{i}B_{i,k}(u),u\in[u_{k-1},u_{n+1}]
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+项目实现采用deBoor-Cox算法，递归计算过程为：
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+P_{i}^{r}(u)=\begin{cases}
+P_{i} & r=0\\
+\lambda_{i}^{r}(u)P_{i}^{r-1}+(1-\lambda_{i}^{r}(u))P_{i-1}^{r-1} & r=1,2,\ldots,k-1;i=j-k+r+1,\ldots j
+\end{cases}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+其中
+\begin_inset Formula $\lambda$
+\end_inset
+
+的定义式为：
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\lambda_{i}^{r}(u)=\frac{u-u_{i}}{u_{i+k-r}-u_{i}}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+其中u采取均匀B样条基，区间长度为
+\begin_inset Formula $\Delta_{i}=(u_{i+1}-u_{i})=\frac{1}{n+k+2}$
+\end_inset
+
+ ，在三次B样条曲线中取k=4.
+\end_layout
+
+\begin_layout Standard
+对于三次B样条曲线，其矩阵表示为：
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+P(u)=\frac{1}{6}\begin{bmatrix}u^{3} & u^{2} & u & 1\end{bmatrix}\begin{bmatrix}-1 & 3 & -3 & 1\\
+3 & -6 & 3 & 0\\
+-3 & 0 & 3 & 0\\
+1 & 4 & 1 & 0
+\end{bmatrix}\begin{bmatrix}P_{i}\\
+P_{i+1}\\
+P_{i+2}\\
+P_{i+3}
+\end{bmatrix}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+该计算公式直接表明B样条曲线上一个离散点的生成只用到四个控制点，这也解释了B样条曲线具有形状的局部控制能力。在GUI实现时，只有三个点时退化为二次B样条曲线，只
+有两个点时退化为直线。
+\end_layout
+
+\begin_layout Subsubsection
+Bezier和B_spline的对比
+\end_layout
+
+\begin_layout Standard
+Bezier曲线缺乏灵活性，确定控制顶点数就确定了曲线的阶次，且当控制顶点数较多时，控制多边形对曲线的控制将减弱，缺少局部性。而B样条曲线可以在局部修改曲线，且
+阶次与控制顶点个数无关。
+\end_layout
+
+\begin_layout Subsection
+旋转算法
+\end_layout
+
+\begin_layout Standard
+点(x,y)绕点(a,b)顺时针旋转a得到(x',y')的公式为：
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+x'=(a-x)cosα-(b-y)sinα+a
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+y'=(a-x)sinα+(b-y)cosα+b
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+所有图元的旋转中心默认是它的几何中心，即所有参数点的平均值。旋转时，每个参数点绕几何中心旋转，然后图元重绘。在公式计算中需要注意，必须要用
+\begin_inset Formula $x^{'}$
+\end_inset
+
+存储新的坐标，否则更新
+\begin_inset Formula $y^{'}$
+\end_inset
+
+使用的就不是原来的坐标。
+\end_layout
+
+\begin_layout Subsection
+缩放算法
+\end_layout
+
+\begin_layout Standard
+点(x,y)绕点(a,b) 旋转s倍得到(x',y')的公式为：
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+x'=(x-a)*s+a
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+y'=(y-b)*s+b
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+和旋转算法相同，缩放的中心也默认是它的几何中心。
+\end_layout
+
+\begin_layout Subsection
+裁剪算法
+\end_layout
+
+\begin_layout Standard
+裁剪的处理包括位置关系判断和交点计算。交点计算的公式为：
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\begin{cases}
+x=x_{1}+u(x_{2}-x_{1}) & (1)\\
+y=y_{1}+u(y_{2}-y_{1}) & (2)
+\end{cases}(0\leqslant u\leqslant1)
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+若边界为x=k，带入(1)式求出u，再将u带入(2)式求出y，记得交点(k,y)，边界为y=k同理。
+\end_layout
+
+\begin_layout Subsubsection
+Cohen-Sutherland
+\end_layout
+
+\begin_layout Standard
+算法用四位区域码代表端点和裁剪区域的相对位置，区域码的每一位从左到右若为1依次代表上下右左四个方向，若端点在区域内则区域码为全0。
+\end_layout
+
+\begin_layout Standard
+\begin_inset Graphics
+	filename cohen.png
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+两个端点的区域码组合有三种情况：
+\end_layout
+
+\begin_layout Itemize
+均为0000，则线段完全在裁剪窗口内，算法结束
+\end_layout
+
+\begin_layout Itemize
+区域码相与后不为0，说明两个端点同时在区域的某个方位，线段完全在裁剪窗口外，舍弃线段
+\end_layout
+
+\begin_layout Itemize
+若上述两条都不满足，选择两端点不是全0的一个，根据编码中1的位置求和相应边界的交点，更新端点继续执行算法
+\end_layout
+
+\begin_layout Subsubsection
+梁友栋-Barsky
+\end_layout
+
+\begin_layout Standard
+算法把二维裁剪的问题化成二次一维裁剪问题，而把裁剪问题转化为解一组不等式的问题。设线段
+\begin_inset Formula $P_{1}P_{2}$
+\end_inset
+
+与裁剪窗口的交点是
+\begin_inset Formula $Q_{1},Q_{2}$
+\end_inset
+
+，则裁剪结果即为线段
+\begin_inset Formula $Q_{1},Q_{2}$
+\end_inset
+
+，设
+\begin_inset Formula $u_{1}=P_{1}Q_{1}/P_{1}P_{2},u_{2}=P_{1}Q_{2}/P_{1}P_{2}$
+\end_inset
+
+,则问题转化为求
+\begin_inset Formula $u_{1},u_{2}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $Q_{1}Q_{2}$
+\end_inset
+
+上的点可以参数化表示成(
+\begin_inset Formula $x_{1}+u\Delta x,u\Delta y)$
+\end_inset
+
+,则裁剪条件可以表示成：
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\begin{cases}
+xw_{min}\leqslant x+u\Delta x\leqslant xw_{max}\\
+yw_{min}\leqslant y+u\Delta y\leqslant yw_{max}
+\end{cases}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+统一表达成
+\begin_inset Formula $up_{k}\leqslant q_{k}$
+\end_inset
+
+有：
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\begin{cases}
+p_{1}=-\Delta x & q_{1}=x_{1}-xw_{min}\\
+p_{2}=\Delta x & q_{2}=xw_{max}-x_{1}\\
+p_{3}=-\Delta y & q_{3}=y_{1}-yw_{min}\\
+p_{4}=\Delta y & q_{4}=yw_{max}-y_{1}
+\end{cases}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $u_{1},u_{2}$
+\end_inset
+
+初始化为0和1，对每一对
+\begin_inset Formula $p_{k},q_{k}$
+\end_inset
+
+，若
+\begin_inset Formula $p_{k}<0$
+\end_inset
+
+，则
+\begin_inset Formula $u\geqslant q_{k}/p_{k}$
+\end_inset
+
+,更新
+\begin_inset Formula $u_{1}$
+\end_inset
+
+,否则更新
+\begin_inset Formula $u_{2}$
+\end_inset
+
+,若
+\begin_inset Formula $u_{1}>u_{2}$
+\end_inset
+
+则说明线段在窗口外，舍弃。另外若p=0,q<0，说明线段在窗口外，也要舍弃。最后根据
+\begin_inset Formula $u_{1},u_{2}$
+\end_inset
+
+得到端点：
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\begin{cases}
+(x_{1}^{'},y_{1}^{'})=(x_{1}+u_{1}\Delta x,y+u_{1}\Delta y)\\
+(x_{2}^{'},y_{2}^{'})=(x_{1}+u_{2}\Delta x,y+u_{2}\Delta y)
+\end{cases}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection
+Cohen-Sutherland和梁友栋-Barsky的对比
+\end_layout
+
+\begin_layout Standard
+交点计算是裁剪算法中耗时的操作，需要一次除法和乘法。若线段已经在裁剪窗口内，则前者较为高效，只需要计算区域码，而后者需要计算和更新u值，其他情况下后者较为高效，
+每次更新u值只需要一次除法，且计算过程中可以发现线段不在窗口内，减少冗余的求交运算。
+\end_layout
+
+\begin_layout Subsubsection
+逐边裁剪算法
+\end_layout
+
+\begin_layout Standard
+算法的输入是顶点序列表示的多边形，依次用每条边界裁剪多边形，裁剪后形成的新的顶点集再传给下一个边界裁剪，最终得到裁剪后的顶点列表。
+\end_layout
+
+\begin_layout Standard
+算法的每一步考虑以窗口的一条边以及延长线构成裁剪线，线将平面划成两个部分，一部分包含裁剪窗口，称作可见一侧，另一部分称为不可见一侧。根据多边形每一边与窗口边形成
+的位置关系，输出0-2个顶点到结果多边形顶点表中，这些顶点系列构成裁剪后的多边形。
+\end_layout
+
+\begin_layout Standard
+裁剪得到的结果多边形顶点由两部分组成，一部分为落在可见一侧的原多边形顶点，另一部分为多边形的边与裁剪窗口边界的交点。因此多边形的裁剪可以认为是构成多边形线段的裁
+剪，而线段的裁剪可以通过检测线段与裁剪窗口边界的位置关系决定是否输出该线段的顶点。具体来说，线段和窗口边界的位置关系有以下四种：
+\end_layout
+
+\begin_layout Itemize
+第一点在外侧，第二点在内侧，则多边形该边与窗口边界交点和第二点添加到输出顶点表。
+\end_layout
+
+\begin_layout Itemize
+两顶点都在内侧，则只有第二点加入输出顶点表。
+\end_layout
+
+\begin_layout Itemize
+第一点在内侧，第二点在外侧，则只有与窗口边界的交点加到输出顶点表。
+\end_layout
+
+\begin_layout Itemize
+两个点都在外侧，输出顶点表不增加任何点。
+\end_layout
+
+\begin_layout Standard
+\begin_inset Graphics
+	filename 逐边裁剪.png
+	scale 60
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+注意到两顶点都在内侧时只有第二点加入，第三种情况也只有窗口边界点加入，这是因为第一点必然会因为第一种情况或第二种情况作为第二点加入，故不需重复加入。
+\end_layout
+
+\begin_layout Subsection
+扫描线填充算法
+\end_layout
+
+\begin_layout Standard
+扫描线多边形区域填充算法是按扫描线顺序（由下到上），计算扫描线与多边形的相交区间，再用要求的颜色显示这些区间的象素，即完成填充工作。
+\end_layout
+
+\begin_layout Standard
+求交运算是繁琐的，因此考虑增量法计算。
+\end_layout
+
+\begin_layout Standard
+假设某条直线的方程为：
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+y=kx+b
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+上一条扫描线的交点为
+\begin_inset Formula $(x_{i},y_{i})$
+\end_inset
+
+,则下一个交点为：
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+(x_{i}+1/k,y_{i}+1)
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+故增量
+\begin_inset Formula $\Delta x=1/k$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+当扫描线达到某条直线的
+\begin_inset Formula $y_{max}$
+\end_inset
+
+后，就可以不再考虑和该直线相交。
+\end_layout
+
+\begin_layout Standard
+综上，对于一条边，需要记录的信息就是当前交点横坐标x，增量
+\begin_inset Formula $\Delta x$
+\end_inset
+
+以及
+\begin_inset Formula $y_{max}$
+\end_inset
+
+。一条扫描线需要求交边的集合形成活动边表，为了使活动边表正确更新，需要维护一个指针数组或字典，存放扫描线到达y值时需要新加入的边，同时求交结束之后要把到达
+\begin_inset Formula $y_{max}$
+\end_inset
+
+的边删除。
+\end_layout
+
+\begin_layout Standard
+因此算法的步骤为：
+\end_layout
+
+\begin_layout Itemize
+建立边表
+\end_layout
+
+\begin_layout Itemize
+从最低扫描线开始到最高扫描线循环 
+\end_layout
+
+\begin_layout Itemize
+建立或调整活动边表
+\end_layout
+
+\begin_layout Itemize
+按照活动边表中的接点顺序填充
+\end_layout
+
+\begin_layout Subsection
+椭圆填充算法
+\end_layout
+
+\begin_layout Standard
+设椭圆方程为:
+\begin_inset Formula $\frac{x^{2}}{a^{2}}+\frac{y^{2}}{b^{2}}=1$
+\end_inset
+
+，则点在椭圆内等价于：
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+x^{2}b^{2}+y^{2}a^{2}\leqslant a^{2}b^{2}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+考虑到以下两点：
+\end_layout
+
+\begin_layout Itemize
+椭圆具有水平和垂直对称性。
+\end_layout
+
+\begin_layout Itemize
+从轴上移开时，椭圆轮廓越来越倾斜。
+\end_layout
+
+\begin_layout Standard
+故可以从横轴开始向上绘制，维护一个dx变量代表上一条扫描线和椭圆相交点和a的差值，随着椭圆越来越倾斜，dx也越来越大，不断递增。当前扫描线的dx以上一条扫描线的
+dx为起点递增，直到根据判别式(4)右端点在椭圆内。
+\end_layout
+
+\begin_layout Subsection
+图元选择算法
+\end_layout
+
+\begin_layout Standard
+鼠标点击之后，根据点击的坐标遍历画布上的图元，判断点击坐标是否在图元区域内。
+\end_layout
+
+\begin_layout Itemize
+直线：用公式
+\begin_inset Formula $\frac{|Ax+By+c|}{\sqrt{A^{2}+B^{2}}}$
+\end_inset
+
+计算点到直线的距离distance，distance小于预设的阈值时认为在直线区域内
+\end_layout
+
+\begin_layout Itemize
+椭圆：比较
+\begin_inset Formula $\frac{x^{2}}{a^{2}}+\frac{y^{2}}{b^{2}}$
+\end_inset
+
+和1的大小，如果小于则判断在椭圆范围内。
+\end_layout
+
+\begin_layout Itemize
+多边形和曲线：遍历所有顶点获取其
+\begin_inset Formula $(x_{min},y_{min}),(x_{max},y_{max})$
+\end_inset
+
+,若点击坐标在这两个点构成的矩形框内，则认为在图元区域内。
+\end_layout
+
+\begin_layout Section
+系统介绍
+\end_layout
+
+\begin_layout Subsection
+算法模块
+\end_layout
+
+\begin_layout Subsubsection
+实现情况
+\end_layout
+
+\begin_layout Standard
+算法模块在cg_algorithms.py中实现，包括了图元绘制和图元变换的算法以及一些功能函数。对于图元绘制，算法的输入为图元的端点或控制点，返回图元的像素列表
+；对于图元变换，算法输入为端点或控制点，输出为变换后的端点或控制点。在一个函数中，通过算法名称确定具体操作使用的算法类型。
+\end_layout
+
+\begin_layout Subsubsection
+程序列表
+\end_layout
+
+\begin_layout Standard
+\begin_inset Tabular
+<lyxtabular version="3" rows="14" columns="2">
+<features tabularvalignment="middle">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+draw_line
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+绘制直线
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+draw_polygon
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+绘制多边形
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+draw_ellipse
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+绘制椭圆
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+compute_lambda
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+B样条曲线deBoor-Cox算法中计算
+\begin_inset Formula $\lambda$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+compute_p
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+B样条曲线deBoor-Cox算法递归计算离散点
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+draw_curve
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+绘制曲线
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+translate
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+图元平移
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+rotate
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+图元旋转
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+scale
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+图元缩放
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+test
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+梁友栋-Barsky算法测试不等式
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+inwindow
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+判断点是否在裁剪窗口中
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+meetpoint
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+求直线和裁剪窗口边界的交点
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+bordercheck
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+逐边裁剪算法处理边
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+clip
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+图元裁剪
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+命令行程序
+\end_layout
+
+\begin_layout Standard
+命令行程序接受输入文件和输出文件夹两个参数。运行时逐条读取输入文件中的指令，解析其中的参数，在图元字典中加入图元。遇到saveCanvas指令时，将图元字典中的
+所有图元根据类型调用算法模块的相应算法计算，得到图元的像素列表，然后根据像素列表在画布数组中写入颜色。最后调用PIL.Image库中的save函数将数组保存为bm
+p文件，放到指定的输出文件夹中。
+\end_layout
+
+\begin_layout Subsection
+GUI程序
+\end_layout
+
+\begin_layout Standard
+代码结构如下：
+\end_layout
+
+\begin_layout Standard
+├─CG_demo 
+\end_layout
+
+\begin_layout Standard
+│ ├─cg_algorithms.py ---- // 算法实现 
+\end_layout
+
+\begin_layout Standard
+│ ├─cg_cli.py ----------- // 命令行程序 
+\end_layout
+
+\begin_layout Standard
+│ ├─cg_gui.py ----------- // gui程序 
+\end_layout
+
+\begin_layout Standard
+│ └─drawui.py ----------- // gui界面 
+\end_layout
+
+\begin_layout Standard
+└─ICON ------------------ // gui图标
+\end_layout
+
+\begin_layout Standard
+如下图所示，除了菜单和状态栏，主窗口主要由画布窗口，工具栏和颜色选择区构成，主窗口和画布窗口共享了画布对象，由画布窗口对其更新，在主窗口中显示；侧边的工具栏用来
+绘制图元，上方的工具栏用来操作图元。
+\end_layout
+
+\begin_layout Standard
+\begin_inset Graphics
+	filename C:/Users/11746/Desktop/hhh.png
+	scale 50
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+交互逻辑
+\end_layout
+
+\begin_layout Subsubsection
+绘制逻辑
+\end_layout
+
+\begin_layout Standard
+菜单栏选择图元类型及使用算法后，可以进行相应图元绘制。不同图元的绘制逻辑不同。
+\end_layout
+
+\begin_layout Itemize
+直线和椭圆，鼠标从按下到释放视作一次绘制，鼠标移动过程中图元也会随之变化，直到鼠标释放。
+\end_layout
+
+\begin_layout Itemize
+多边形需要先用鼠标拉出一条直线，作为第一条边，之后加入的点只需点击相应位置，程序会自动连接。再次从菜单栏选择一次视作之前的多边形绘制结束。
+\end_layout
+
+\begin_layout Itemize
+曲线绘制中每点击一次就会加入一个控制点并显示，绘制结束方式和多边形一致。
+\end_layout
+
+\begin_layout Subsubsection
+操作逻辑
+\end_layout
+
+\begin_layout Standard
+如果需要对图元操作，首先通过选取操作选中画布上的某个图元，再选择编辑操作。平移，旋转和缩放操作都是在鼠标按下时执行，根据鼠标的位置/和中心点的相对位置进行操作。
+裁剪操作需要用鼠标拉出一个矩形框，只对直线和多边形的图元有效。
+\end_layout
+
+\begin_layout Subsubsection
+颜色设置逻辑
+\end_layout
+
+\begin_layout Standard
+点击主界面右边的两个按钮就可以弹出颜色选取框设置画笔和填充颜色，之后绘制的图元和按钮的颜色会变为相应颜色，不影响已经绘制好的图元颜色，但重复填充会覆盖之前的颜色
+。
+\end_layout
+
+\begin_layout Subsubsection
+保存画布逻辑
+\end_layout
+
+\begin_layout Standard
+点击菜单栏的保存可以保存当前画布，程序退出时也会提醒用户是否保存画布。
+\end_layout
+
+\begin_layout Standard
+\begin_inset Graphics
+	filename 退出.JPG
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection
+工具栏图标的默认算法
+\end_layout
+
+\begin_layout Standard
+菜单栏中选择图元绘制和编辑操作可以选择不同的算法，而通过工具栏暂时不可以，默认的算法是上一次选择该操作的算法。
+\end_layout
+
+\begin_layout Standard
+\begin_inset Tabular
+<lyxtabular version="3" rows="5" columns="2">
+<features tabularvalignment="middle">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+图元/操作
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+初始默认算法
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+线段
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Bresenham
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+多边形
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Bresenham
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+曲线
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Bezier
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+裁剪
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+liang_barsky
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+ 
+\end_layout
+
+\begin_layout Subsubsection
+GUI快捷键
+\end_layout
+
+\begin_layout Standard
+\begin_inset Tabular
+<lyxtabular version="3" rows="10" columns="2">
+<features tabularvalignment="middle">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+新建
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Ctrl+N
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+保存
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Ctrl+S
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+直线
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Ctrl+L
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+多边形
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Ctrl+P
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+椭圆
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Ctrl+E
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+曲线
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Ctrl+C
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+移动
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Ctrl+M
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+旋转
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Ctrl+R
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+缩放
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Ctrl+A
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+裁剪
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Ctrl+B
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+
+\end_layout
+
+\begin_layout Subsection
+设计思路
+\end_layout
+
+\begin_layout Subsubsection
+实现新的图元绘制/操作
+\end_layout
+
+\begin_layout Standard
+具体实现的流程图如下。要实现的部分有：
+\end_layout
+
+\begin_layout Itemize
+连接信号和槽
+\end_layout
+
+\begin_layout Itemize
+槽函数设置状态
+\end_layout
+
+\begin_layout Itemize
+根据状态决定鼠标按下，移动和释放的操作，比如保存坐标，保存图元，调用算法等。
+\end_layout
+
+\begin_layout Standard
+\begin_inset Graphics
+	filename 设计思路.JPG
+	scale 70
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection
+程序鲁棒性
+\end_layout
+
+\begin_layout Itemize
+在算法实现中，若传入顶点列表为空，返回空列表，尤其是裁剪时，可能在裁剪过程中端点列表被清空。
+\end_layout
+
+\begin_layout Itemize
+未选择图元时，禁止使用一切操作，并弹出警告：
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+\begin_inset Graphics
+	filename 警告.JPG
+
+\end_inset
+
+
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+禁止对线段和多边形以外的图元执行裁剪操作，如下图，红框代表选中的是椭圆，此时选中裁剪操作会弹出警告：
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+\begin_inset Graphics
+	filename 裁剪2.JPG
+
+\end_inset
+
+
+\end_layout
+
+\end_deeper
+\begin_layout Subsubsection
+巧妙的设计
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+绘制直线和椭圆算法的通用性处理
+\series default
+：在绘制直线和椭圆的算法中，需要讨论x和y谁是主轴，算法实现上可以通过交换x和y轴坐标的方式统一。
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+在直线绘制中，如果以y为主轴，可以将端点的x，y轴的坐标交换，用一个标志记录是否交换，统一按照x为主轴的方式计算，存储结果时再按照标志决定是否需要变换坐标。另外
+，在实现直线绘制算法中，步长可正可负，可以通过
+\begin_inset Formula $\frac{\Delta x}{|\Delta x|}$
+\end_inset
+
+确定，不必判断符号。
+\end_layout
+
+\begin_layout Itemize
+在椭圆绘制中，如果
+\begin_inset Formula $r_{x}<r_{y}$
+\end_inset
+
+，记录一个反转标志，将
+\begin_inset Formula $r_{x}$
+\end_inset
+
+和
+\begin_inset Formula $r_{y}$
+\end_inset
+
+交换，在记录结果时，若反转标志为真则再将得到的像素坐标交换x和y轴。
+\end_layout
+
+\begin_layout Standard
+\begin_inset Graphics
+	filename reverse.JPG
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Graphics
+	filename reverse_2.JPG
+
+\end_inset
+
+
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+
+\series bold
+图元操作的数据结构
+\series default
+：在实现操作的过程中，由于记录坐标、使用算法、操作类型的需要，使用了图元类MyItem作为操作的数据结构，但在画布和图元字典中都不记录其信息。一个例外是裁剪操作
+，会在鼠标点击和移动时暂时在画布上显示该图元，即显示一个裁剪框，在裁剪结束后，该图元从画布上被清除。
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+旋转操作的方向
+\series default
+判断：实现旋转操作时，由于鼠标移动就会引起更新，故每次更新移动的距离不大，可以通过坐标的比较得到逆时针还是顺时针转动。
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+重叠图元的选择
+\series default
+：由于图元可能重叠，而程序从前往后遍历字典，因此可能存在无法选中被覆盖图元的情况。因此程序提供了“置于底层”操作，将选中的图元放在字典的末尾，这样被覆盖的图元就
+可以被选中。
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+图元颜色设置
+\series default
+：程序中需要维护一个画笔颜色状态，同时需要允许每个图元有不同的颜色，因此在MyItem类中设置了一个类属性_color，而每个MyItem对象有自己的颜色属性c
+olor，在初始化时获取_color的值。这样更改画笔颜色时修改类属性的值即可，之后新创建的图元都会是画笔的颜色，而已经存在的图元颜色不受影响。
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+\begin_inset Graphics
+	filename color1.JPG
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Graphics
+	filename color2.JPG
+
+\end_inset
+
+
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+
+\series bold
+保证多边形的边不交叉
+\series default
+。在多边形绘制中，每点击一次就会在顶点列表末尾添加一个点，然后从前往后画线相连，这样可能出现边交叉的情况：
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+\begin_inset Graphics
+	filename 交叉.JPG
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+在填充多边形时，这种交叉的多边形可能无法正确填充。故在加入顶点时对多边形顶点列表排序，使其符合顺时针顺序：
+\end_layout
+
+\begin_layout Standard
+\begin_inset Graphics
+	filename 排序.JPG
+	scale 70
+
+\end_inset
+
+
+\end_layout
+
+\end_deeper
+\begin_layout Section
+总结
+\end_layout
+
+\begin_layout Standard
+通过参考教材，PPT和网络资料，实验实现了所有要求的算法和命令行，GUI程序功能，并且增加了多边形填充、裁剪，图元删除等额外功能，具有较为友好的用户界面。完成实
+验的过程中，对图形学算法和pyqt的使用也有了更加深入的理解。
+\end_layout
+
+\begin_layout Bibliography
+\begin_inset CommandInset bibitem
+LatexCommand bibitem
+label "1"
+key "key-5"
+literal "true"
+
+\end_inset
+
+孙正兴.计算机图形学[M].机械工业出版社.2006
+\end_layout
+
+\begin_layout Bibliography
+\begin_inset CommandInset bibitem
+LatexCommand bibitem
+label "2"
+key "key-6"
+literal "false"
+
+\end_inset
+
+.两鬓已不能斑白.
+ DDA算法和Bresenham算法.
+ https://blog.csdn.net/u010429424/article/details/77834046
+\end_layout
+
+\begin_layout Bibliography
+\begin_inset CommandInset bibitem
+LatexCommand bibitem
+label "3"
+key "key-6"
+literal "false"
+
+\end_inset
+
+clairvoyant.
+ 中点椭圆算法.
+ https://www.cnblogs.com/clairvoyant/p/5540023.html
+\end_layout
+
+\begin_layout Bibliography
+\begin_inset CommandInset bibitem
+LatexCommand bibitem
+label "4"
+key "key-8"
+literal "false"
+
+\end_inset
+
+jiangjjp2812.
+ 二次与三次B样条曲线c++实现.
+ https://blog.csdn.net/jiangjjp2812/article/details/100176547
+\end_layout
+
+\begin_layout Bibliography
+\begin_inset CommandInset bibitem
+LatexCommand bibitem
+label "5"
+key "key-4"
+literal "false"
+
+\end_inset
+
+iteye_12187.
+ 计算某点绕中心点旋转一个角度后的坐标.
+ https://blog.csdn.net/iteye_12187/article/details/824800
+\end_layout
+
+\begin_layout Bibliography
+\begin_inset CommandInset bibitem
+LatexCommand bibitem
+label "6"
+key "key-5"
+literal "false"
+
+\end_inset
+
+独孤静，扫描线多边形填充算法，https://blog.csdn.net/DUGUjing/article/details/83049407
+\end_layout
+
+\begin_layout Bibliography
+\begin_inset CommandInset bibitem
+LatexCommand bibitem
+label "7"
+key "key-6-1"
+literal "false"
+
+\end_inset
+
+椭圆填充算法 https://www.coder.work/article/118608
+\end_layout
+
+\end_body
+\end_document
